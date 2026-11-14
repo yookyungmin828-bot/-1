@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>사자성어 학습</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Noto Sans KR',sans-serif;background:#EEF1EE;color:#1B2A38}
+.han{font-family:'Noto Serif KR',serif}
+.b{padding:.6rem 1rem;border-radius:.6rem;font-weight:500;border:1px solid #1B2A38;background:#fff}
+.bp{background:#1F6F5C;color:#fff;border-color:#1F6F5C}
+.on{background:#1B2A38;color:#fff}
+.card{background:#fff;border:1px solid #C9D2CB;border-radius:.75rem}
+.ok{background:#DDF0E6;border-color:#1F6F5C}.no{background:#F8E0DE;border-color:#B3261E}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #1F6F5C;outline-offset:2px}
+.mc.sel{box-shadow:0 0 0 3px #1F6F5C}
+.hl{display:inline-block;border-bottom:1px dotted rgba(27,42,56,.35)}
+</style>
+</head>
+<body>
+<div class="max-w-xl mx-auto px-4 pt-5 pb-28">
+  <div class="flex items-center gap-3 mb-4"><span id="back"></span><h1 class="han text-2xl font-bold">사자성어 학습</h1><button class="b text-sm ml-auto" aria-label="한자사전 열기" onclick="A.dict('')">📖 한자사전</button></div>
+  <div id="app"></div>
+  <p class="text-center mt-8"><button class="text-xs text-slate-400 underline" onclick="A.adminLogin()">관리자</button></p>
+</div>
+<nav id="nav" class="fixed bottom-0 inset-x-0 bg-white border-t border-[#C9D2CB] grid grid-cols-4 max-w-xl mx-auto"></nav>
+<div id="modal"></div>
+<div id="memo"></div>
+<div id="dict"></div>
+
+<script>
+/* ===== 데이터 =====
+   사진 속 목록에 맞게 아래 배열을 수정/추가하세요: [사자성어, 독음, 뜻, 유래] */
+const BASE=[
+['甘言利說','감언이설','귀가 솔깃하도록 달콤한 말과 이로운 조건을 내세워 남을 꾀는 말.','듣기 좋은 말로 비위를 맞추고 이익을 내세워 꾀는 모습에서 굳어진 말입니다. 특정 고사보다는 관용적으로 쓰이며, 사기·유혹 상황에서 자주 쓰입니다.'],
+['苦盡甘來','고진감래','쓴 것이 다하면 단 것이 온다는 뜻으로, 고생 끝에 즐거움이 옴.','어려움을 견디고 나면 좋은 때가 찾아온다는 뜻으로, 힘든 시기를 위로하거나 격려할 때 씁니다.'],
+['累卵之勢','누란지세','알을 쌓아 놓은 것처럼 매우 위태로운 형세.','『사기』에 전하는 범저(范雎) 이야기에서, 진나라의 형세가 알을 쌓아 놓은 것보다 위태롭다고 한 말에서 비롯되었다고 합니다.'],
+['塞翁之馬','새옹지마','인생의 길흉화복은 예측하기 어려워 늘 변화가 많음.','『회남자』에 나옵니다. 변방 노인의 말이 달아났다가 준마를 데려왔고, 아들이 그 말에서 떨어져 다리를 다쳤지만 덕분에 전쟁에 끌려가지 않았다는 이야기입니다.'],
+['轉禍爲福','전화위복','재앙이 바뀌어 오히려 복이 됨.','『사기』 등에서 "화를 원인으로 삼아 복을 만든다"는 표현에서 비롯되었습니다. 나쁜 일을 잘 활용해 좋은 결과로 바꾼다는 뜻입니다.'],
+['臥薪嘗膽','와신상담','섶에 눕고 쓸개를 맛본다는 뜻으로, 원수를 갚으려고 온갖 고난을 참고 견딤.','중국 춘추시대 오나라 부차는 섶에 누워 월나라 구천에게 복수를 다짐했고, 패한 구천은 쓸개를 맛보며 치욕을 잊지 않아 결국 부차를 무찔렀습니다.'],
+['結草報恩','결초보은','죽어서도 은혜를 잊지 않고 갚음.','『춘추좌씨전』에 나옵니다. 위과가 아버지의 첩을 순장하지 않고 시집보내 주었는데, 훗날 전쟁터에서 그 아버지의 혼이 풀을 묶어 적장을 넘어뜨려 위과를 도왔다는 이야기입니다.'],
+['刻舟求劍','각주구검','판단력이 둔하여 시세의 변화를 모르고 어리석게 고집함.','『여씨춘추』에 나옵니다. 초나라 사람이 배에서 칼을 강에 빠뜨리자 뱃전에 표시를 새기고, 배가 멈춘 뒤 그 자리에서 칼을 찾으려 했다는 이야기입니다.'],
+['漁父之利','어부지리','둘이 다투는 사이에 제3자가 이익을 봄.','『전국책』에 나옵니다. 도요새와 조개가 서로 물고 다투는 사이 지나가던 어부가 둘 다 잡았다는 이야기로, 소대가 조나라 왕을 설득할 때 든 비유입니다.'],
+['守株待兔','수주대토','한 가지 일에만 얽매여 발전이 없음. 요행을 바람.','『한비자』에 나옵니다. 송나라 농부가 토끼가 그루터기에 부딪혀 죽은 것을 보고, 농사를 그만두고 그루터기만 지키며 토끼를 기다렸다는 이야기입니다.'],
+['他山之石','타산지석','다른 산의 나쁜 돌도 내 옥을 가는 데 쓸 수 있듯, 남의 하찮은 말과 행동도 나의 수양에 도움이 됨.','『시경』 소아 학명 편에서 비롯되었습니다. 다른 사람의 잘못을 보고 자신을 돌아본다는 뜻으로 쓰입니다.'],
+['雪上加霜','설상가상','눈 위에 서리가 덮인다는 뜻으로, 불행이 거듭 겹침.','불교 서적 『경덕전등록』 등에 쓰인 표현입니다. 어려운 일이 겹칠 때 씁니다.'],
+['大器晩成','대기만성','큰 그릇은 늦게 이루어진다는 뜻으로, 크게 될 사람은 늦게 이루어짐.','『노자』 41장의 "큰 그릇은 늦게 이루어진다"에서 비롯되었습니다. 오랜 노력 끝에 뒤늦게 성공하는 사람을 말합니다.'],
+['螢雪之功','형설지공','반딧불과 눈빛으로 글을 읽으며 이룬 공이라는 뜻으로, 고생하며 부지런히 공부한 보람.','『진서』에 나옵니다. 가난했던 차윤은 반딧불로, 손강은 눈빛으로 책을 읽으며 공부해 훗날 높은 벼슬에 올랐다고 합니다.'],
+['管鮑之交','관포지교','관중과 포숙아의 사귐이라는 뜻으로, 서로 이해하고 믿는 매우 친밀한 우정.','『사기』에 나옵니다. 포숙아는 가난하고 실수가 많던 친구 관중을 끝까지 믿고 도와, 관중이 제나라 재상이 되게 했습니다.'],
+['甘吞苦吐','감탄고토','달면 삼키고 쓰면 뱉는다는 뜻으로, 자기 비위에 맞으면 받아들이고 맞지 않으면 버림.','특정 고사나 출전은 확인되지 않았습니다. “달면 삼키고(甘吞) 쓰면 뱉는다(苦吐)”는 말뜻 그대로 굳어진 표현입니다.'],
+['孤立無援','고립무원','고립되어 구원을 받을 데가 없음.','특정 고사나 출전은 확인되지 않았습니다. “외로이 서 있고(孤立) 도움이 없다(無援)”는 말뜻 그대로 쓰입니다.'],
+['群鷄一鶴','군계일학','닭의 무리 가운데 한 마리의 학이라는 뜻으로, 많은 사람 가운데서 뛰어난 한 사람.','『진서』 혜소전에 전하는 이야기에서 비롯되었다고 합니다. 진나라 혜소(嵇紹)의 늠름한 모습을 보고 “닭의 무리 속에 있는 학 같다”고 한 말입니다.'],
+['東問西答','동문서답','동쪽을 묻는데 서쪽을 대답한다는 뜻으로, 묻는 말과 상관없는 엉뚱한 대답.','특정 고사나 출전은 확인되지 않았습니다. “동쪽을 묻는데 서쪽으로 답한다”는 말뜻 그대로 쓰입니다.'],
+['同病相憐','동병상련','같은 병을 앓는 사람끼리 서로 가엾게 여긴다는 뜻으로, 처지가 비슷한 사람끼리 서로 동정하고 도움.','『오월춘추』에 나오는 오자서의 말에서 비롯되었다고 합니다. 오자서가 같은 처지의 백비를 받아들이며 “같은 병은 서로 불쌍히 여기고 같은 근심은 서로 구한다”는 뜻의 말을 했다고 전합니다.'],
+['同床異夢','동상이몽','같은 잠자리에서 서로 다른 꿈을 꾼다는 뜻으로, 겉으로는 같이 행동하면서 속으로는 각기 다른 생각을 함.','정확한 출전은 확인하지 못했습니다. “같은 침상(同床)에서 다른 꿈(異夢)”이라는 말뜻 그대로 쓰입니다.'],
+['傍若無人','방약무인','곁에 사람이 없는 것처럼 거리낌 없이 제멋대로 행동함.','『사기』 자객열전에 나옵니다. 형가가 연나라 저잣거리에서 친구 고점리와 술을 마시며 노래하고 울기를 곁에 아무도 없는 듯이 했다는 이야기에서 비롯되었습니다.'],
+['事必歸正','사필귀정','모든 일은 반드시 바른 이치대로 돌아감.','특정 고사나 출전은 확인되지 않았습니다. “일은 반드시 바른 데로 돌아간다”는 말뜻 그대로 쓰입니다.'],
+['手不釋卷','수불석권','손에서 책을 놓지 않는다는 뜻으로, 늘 열심히 공부함.','정확한 출전은 확인하지 못했습니다. “손에서 책을 놓지 않는다”는 말뜻 그대로 쓰입니다.'],
+['言中有骨','언중유골','말 속에 뼈가 있다는 뜻으로, 예사로운 말 속에 단단한 속뜻이 들어 있음.','특정 고사나 출전은 확인되지 않았습니다. 평범해 보이는 말 속에 비판이나 불만 같은 속뜻이 담겨 있을 때 씁니다.'],
+['類類相從','유유상종','같은 무리끼리 서로 따르고 사귐.','정확한 출전은 확인하지 못했습니다. “같은 부류끼리 서로 따른다”는 말뜻 그대로 쓰입니다.'],
+['以熱治熱','이열치열','열로써 열을 다스린다는 뜻으로, 힘에는 힘으로 맞서 대응함.','특정 고사나 출전은 확인되지 않았습니다. 더운 여름에 뜨거운 음식을 먹어 더위를 이기는 경우 등에 흔히 씁니다.'],
+['以心傳心','이심전심','마음에서 마음으로 전한다는 뜻으로, 말이나 글로 하지 않아도 서로 마음이 통함.','불교 선종에서 말이나 글이 아니라 마음으로 깨달음을 전한다는 뜻으로 쓰이던 표현에서 비롯되었다고 합니다.'],
+['千載一遇','천재일우','천 년에 한 번 만난다는 뜻으로, 좀처럼 얻기 어려운 좋은 기회.','진(晉)나라 원굉이 『삼국명신서찬』에서 어진 임금과 신하의 만남을 “천 년에 한 번 있는 만남”이라고 한 데서 비롯되었다고 합니다.'],
+['寸鐵殺人','촌철살인','한 치의 쇠붙이로도 사람을 죽일 수 있다는 뜻으로, 짧은 말 한마디로 상대의 급소를 찌르거나 감동시킴.','송나라 나대경의 『학림옥로』에서 선(禪)의 가르침을 설명하며 쓴 표현에서 비롯되었다고 전합니다.'],
+['針小棒大','침소봉대','바늘만 한 것을 몽둥이만 하다고 말한다는 뜻으로, 작은 일을 크게 부풀려 말함.','특정 고사나 출전은 확인되지 않았습니다. “작은 바늘(針小)을 큰 몽둥이(棒大)처럼 말한다”는 말뜻 그대로 쓰입니다.'],
+['表裏不同','표리부동','겉과 속이 같지 않다는 뜻으로, 겉으로 드러난 말·행동과 속마음이 다름.','특정 고사나 출전은 확인되지 않았습니다. 겉(表)과 속(裏)이 같지 않다(不同)는 말뜻 그대로 쓰입니다.'],
+['風前燈火','풍전등화','바람 앞의 등불이라는 뜻으로, 매우 위태로운 처지.','특정 고사나 출전은 확인되지 않았습니다. 바람 앞에 놓인 등불처럼 곧 꺼질 듯 위태로운 상황을 말합니다.'],
+['狐假虎威','호가호위','여우가 호랑이의 위세를 빌려 으스댄다는 뜻으로, 남의 권세를 빌려 위세를 부림.','『전국책』 초책에 나옵니다. 강을이 초나라 선왕에게, 여우가 호랑이를 앞세워 다른 짐승들이 도망치게 만든 이야기를 들어 소해휼이 왕의 위세를 빌리고 있다고 비유했습니다.']
+];
+/* 한자 데이터: '음|훈(뜻)|부수|획수'. 실제 사전 API를 쓸 때는 lookupHanja()만 교체하면 됩니다. */
+const CH={
+'甘':'감|달 감|甘|5','言':'언|말씀 언|言|7','利':'리(이)|이로울 리|刀|7','說':'설(세·열)|말씀 설|言|14',
+'苦':'고|쓸 고|艸|8','盡':'진|다할 진|皿|14','來':'래(내)|올 래|人|8','累':'루(누)|포갤 루|糸|11',
+'卵':'란(난)|알 란|卩|7','之':'지|갈·~의 지|丿|4','勢':'세|형세 세|力|13','塞':'새|변방 새|土|13',
+'翁':'옹|늙은이 옹|羽|10','馬':'마|말 마|馬|10','轉':'전|구를 전|車|18','禍':'화|재앙 화|示|14',
+'爲':'위|할 위|爪|12','福':'복|복 복|示|14','臥':'와|누울 와|臣|8','薪':'신|섶 신|艸|17',
+'嘗':'상|맛볼 상|口|14','膽':'담|쓸개 담|肉|17','結':'결|맺을 결|糸|12','草':'초|풀 초|艸|10',
+'報':'보|갚을 보|土|12','恩':'은|은혜 은|心|10','刻':'각|새길 각|刀|8','舟':'주|배 주|舟|6',
+'求':'구|구할 구|水|7','劍':'검|칼 검|刀|15','漁':'어|고기잡을 어|水|14','父':'부|아비 부|父|4',
+'守':'수|지킬 수|宀|6','株':'주|그루 주|木|10','待':'대|기다릴 대|彳|9','兔':'토|토끼 토|儿|7',
+'他':'타|다를 타|人|5','山':'산|메 산|山|3','石':'석|돌 석|石|5','雪':'설|눈 설|雨|11',
+'上':'상|위 상|一|3','加':'가|더할 가|力|5','霜':'상|서리 상|雨|17','大':'대|큰 대|大|3',
+'器':'기|그릇 기|口|16','晩':'만|늦을 만|日|11','成':'성|이룰 성|戈|6','螢':'형|반딧불 형|虫|16',
+'功':'공|공 공|力|5','管':'관|대롱 관|竹|14','鮑':'포|절인어물 포|魚|16','交':'교|사귈 교|亠|6',
+'吞':'탄|삼킬 탄|口|7','吐':'토|토할 토|口|6','孤':'고|외로울 고|子|8','立':'립(입)|설 립|立|5','無':'무|없을 무|火|12','援':'원|도울 원|手|12',
+'群':'군|무리 군|羊|13','鷄':'계|닭 계|鳥|21','一':'일|한 일|一|1','鶴':'학|학 학|鳥|21','東':'동|동녘 동|木|8','問':'문|물을 문|口|11',
+'西':'서|서녘 서|襾|6','答':'답|대답 답|竹|12','同':'동|한가지 동|口|6','病':'병|병 병|疒|10','相':'상|서로 상|目|9','憐':'련(연)|불쌍히여길 련|心|16',
+'床':'상|평상 상|广|7','異':'이|다를 이|田|11','夢':'몽|꿈 몽|夕|14','傍':'방|곁 방|人|12','若':'약|같을 약|艸|9','人':'인|사람 인|人|2',
+'事':'사|일 사|亅|8','必':'필|반드시 필|心|5','歸':'귀|돌아갈 귀|止|18','正':'정|바를 정|止|5','手':'수|손 수|手|4','不':'불(부)|아닐 불|一|4',
+'釋':'석|풀 석|釆|20','卷':'권|책 권|卩|8','中':'중|가운데 중|丨|4','有':'유|있을 유|月|6','骨':'골|뼈 골|骨|10','類':'류(유)|무리 류|頁|19',
+'從':'종|좇을 종|彳|11','以':'이|써 이|人|5','熱':'열|더울 열|火|15','治':'치|다스릴 치|水|8','心':'심|마음 심|心|4','傳':'전|전할 전|人|13',
+'千':'천|일천 천|十|3','載':'재|실을 재|車|13','遇':'우|만날 우|辵|13','寸':'촌|마디 촌|寸|3','鐵':'철|쇠 철|金|21','殺':'살|죽일 살|殳|11',
+'針':'침|바늘 침|金|10','小':'소|작을 소|小|3','棒':'봉|몽둥이 봉|木|12','表':'표|겉 표|衣|8','裏':'리(이)|속 리|衣|13','風':'풍|바람 풍|風|9',
+'前':'전|앞 전|刀|9','燈':'등|등 등|火|16','火':'화|불 화|火|4','狐':'호|여우 호|犬|8','假':'가|거짓 가|人|11','虎':'호|범 호|虍|8','威':'위|위엄 위|女|9'
+};
+/* 한자 조회 (API 연동 지점): 지금은 CH를 쓰고, 외부 API로 바꿀 때는 fetch 결과를 같은 형태로 반환하세요. */
+async function lookupHanja(ch){
+  const r=CH[ch]; if(!r) return null;
+  const [eum,mean,bu,st]=r.split('|'); return {ch,eum,mean,bu,st};
+}
+
+/* ===== 상태 ===== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
+const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const norm=s=>String(s).replace(/\s/g,'');
+const ADMIN_PW='change-me'; /* ★ 관리자 비밀번호: 배포 전에 반드시 바꾸세요 (코드에 보이므로 보안용이 아님) */
+const ss=k=>{try{return sessionStorage.getItem(k)}catch(e){return null}};
+const ssSet=(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}};
+let SHARED=[];
+const OLD=BASE.slice(0,15); /* 예전 저장 형식(번호) 이전용: 최초 15개의 순서 */
+const okEntry=x=>Array.isArray(x)&&x.length>=3&&/^[\u3400-\u4DBF\u4E00-\u9FFF]{2,8}$/.test(String(x[0]))&&[x[1],x[2]].every(t=>typeof t==='string'&&t.trim());
+/* 목록 = 기본(b) + 관리자 공용(s), 한자 중복은 앞선 것만 사용 */
+function buildI(){const seen=new Set(),out=[];
+  [[BASE,'b'],[SHARED,'s']].forEach(([arr,o])=>arr.forEach(x=>{if(!seen.has(x[0])){seen.add(x[0]);out.push([x[0],x[1],x[2],x[3]||'등록된 유래·해설이 없습니다.',o])}}));
+  return out}
+let I=buildI();
+function rebuild(){
+  const kb=[...S.bm].map(i=>I[i]&&I[i][0]),ks=[...S.sel].map(i=>I[i]&&I[i][0]);
+  I=buildI();
+  const m=a=>new Set(a.map(k=>I.findIndex(x=>x[0]===k)).filter(i=>i>=0));
+  S.bm=m(kb);S.sel=m(ks);
+}
+const S={form:{},err:'',msg:'',tab:'dict',sel:new Set(),bm:new Set(),admin:ss('adm')==='1',open:null,ch:null,q:'',study:null,quiz:null,cfg:{type:'mix',scope:'all',n:10}};
+const save=()=>{sv('sel',[...S.sel].map(i=>I[i][0]));sv('bm',[...S.bm].map(i=>I[i][0]))};
+let MEMOS=ld('memos',{});   /* 개인 메모: {사자성어: {t:텍스트, s:[획...], u:시각}} — 이 브라우저에만 저장 */
+const MS={key:null,mode:'pen',tool:'pen',color:'#1B2A38',pen:0.5,ers:1.0,strokes:[],hist:[],snap:null,cur:null,ring:null,cv:null,ctx:null};
+let memoT=null;
+const star=i=>S.bm.has(i)?'★':'☆';
+
+/* ===== 공통 뷰 ===== */
+/* 한자 한 글자 → 네이버 한자사전 검색 (새 탭, 누른 글자만 검색) */
+const NAVER='https://hanja.dict.naver.com/#/search?query=';
+const isHanja=c=>/[\u3400-\u4DBF\u4E00-\u9FFF]/.test(c);
+const hLink=(c,cls='hl')=>`<a href="${NAVER+encodeURIComponent(c)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();event.preventDefault();A.dict('${c}')" title="${c} · 한자사전 열기" class="${cls}">${c}</a>`;
+const hLinks=(t,cls='hl')=>[...String(t)].map(c=>isHanja(c)?hLink(c,cls):esc(c)).join('');
+const BACK='<button aria-label="처음 화면으로" title="처음 화면으로" onclick="A.home()" class="shrink-0 w-10 h-10 text-xl rounded-lg border border-[#C9D2CB] bg-white leading-none">⬅️</button>';
+function row(i,mode){
+  const [h,r,m]=I[i];
+  const left=mode==='pick'
+    ?`<label class="flex items-center gap-3 flex-1 cursor-pointer"><input type="checkbox" class="w-5 h-5 accent-[#1F6F5C]" ${S.sel.has(i)?'checked':''} onchange="A.sel(${i})"><span class="han text-xl font-bold">${hLinks(h)}</span><span class="text-sm text-slate-600">${r}</span></label>`
+    :`<div class="flex-1 min-w-0"><div><span class="han text-xl font-bold">${hLinks(h)}</span><button class="text-sm text-slate-600 ml-2" onclick="A.open(${i})">${r}</button></div><button class="block text-left text-xs text-slate-500 mt-1 line-clamp-1" onclick="A.open(${i})">${esc(m)}</button></div>`;
+  return `<div class="card p-3 flex items-center gap-2">${left}<button aria-label="북마크" class="text-2xl px-2 ${S.bm.has(i)?'text-[#B3261E]':'text-slate-400'}" onclick="A.bm(${i})">${star(i)}</button></div>`;
+}
+const list=(ids,mode)=>ids.length?ids.map(i=>row(i,mode)).join(''):'<p class="text-slate-500 text-center py-8">표시할 항목이 없습니다.</p>';
+function listHtml(){
+  const q=norm(S.q);
+  return list(I.map((_,i)=>i).filter(i=>!q||norm(I[i].slice(0,4).join('')).includes(q)),'dict');
+}
+
+/* ===== 탭 뷰 ===== */
+function vDict(){
+  return `<input id="q" value="${esc(S.q)}" oninput="A.q(this.value)" placeholder="한자·독음·뜻으로 검색" class="w-full mb-3 px-4 py-3 rounded-lg border border-[#C9D2CB] bg-white">
+  <div id="list" class="space-y-2">${listHtml()}</div>`;
+}
+function vPick(){
+  const all=I.map((_,i)=>i);
+  return `<div class="flex flex-wrap items-center gap-2 mb-3">
+    <span class="font-medium mr-auto">${S.sel.size}개 선택됨</span>
+    <button class="b text-sm" onclick="A.all(1)">전체 선택</button><button class="b text-sm" onclick="A.all(0)">선택 해제</button></div>
+  <div class="space-y-2">${list(all,'pick')}</div>
+  <div class="fixed bottom-16 inset-x-0 max-w-xl mx-auto px-4 pb-2 flex gap-2">
+    <button class="b bp flex-1 shadow" ${S.sel.size?'':'disabled style="opacity:.4"'} onclick="A.study('sel')">선택한 항목만 학습하기</button>
+    <button class="b flex-1 shadow" ${S.sel.size?'':'disabled style="opacity:.4"'} onclick="A.goQuiz('sel')">이 범위로 퀴즈</button></div>`;
+}
+function vBm(){
+  const ids=[...S.bm].sort((a,b)=>a-b);
+  if(!ids.length) return '<p class="text-center text-slate-500 py-12">북마크한 사자성어가 없습니다.<br>단어장에서 별(☆)을 눌러 어려운 항목을 모아 보세요.</p>';
+  return `<div class="flex gap-2 mb-3"><button class="b bp flex-1" onclick="A.study('bm')">북마크 집중 학습</button><button class="b flex-1" onclick="A.goQuiz('bm')">북마크로 퀴즈</button></div>
+  <div class="space-y-2">${list(ids,'bm')}</div>`;
+}
+
+/* ===== 관리자 ===== */
+function vAdmin(){
+  if(!S.admin)return '<p class="text-center text-slate-500 py-12">관리자 로그인이 필요합니다. 화면 맨 아래 "관리자"를 눌러 로그인하세요.</p>';
+  const f=S.form,v=k=>esc(f[k]||'');
+  const inp=(k,l,ph,cls='')=>`<label class="block mb-3"><span class="text-sm font-medium">${l}</span><input value="${v(k)}" oninput="A.form('${k}',this.value)" placeholder="${ph}" class="w-full mt-1 px-4 py-3 rounded-lg border border-[#C9D2CB] bg-white ${cls}"></label>`;
+  const sl=I.map((x,i)=>i).filter(i=>I[i][4]==='s').map(i=>`<div class="card p-3 flex items-center gap-2"><button class="flex-1 text-left" onclick="A.open(${i})"><span class="han text-xl font-bold">${esc(I[i][0])}</span> <span class="text-sm text-slate-600 ml-1">${esc(I[i][1])}</span><span class="block text-xs text-slate-500 mt-1">${esc(I[i][2])}</span></button><button class="b text-sm text-[#B3261E] border-[#B3261E]" onclick="A.adminDel(${i})">삭제</button></div>`).join('');
+  return `<div class="card p-4 mb-4 bg-[#F6F8F6] text-sm leading-relaxed"><b>관리자 모드</b><br>여기서 추가한 공용 단어는 먼저 이 브라우저의 초안에 저장됩니다. 모든 사용자에게 반영하려면 <b>shared-words.json 내보내기</b>로 파일을 받아, 호스팅 중인 HTML과 같은 위치의 같은 이름 파일을 교체해 업로드하세요.</div>
+  <div class="card p-4 mb-5"><h2 class="font-bold mb-3">공용 사자성어 추가</h2>
+  ${inp('ah','사자성어 (한자)','예: 亡羊補牢','han text-lg')}${inp('ar','독음 (한글 발음)','예: 망양보뢰')}${inp('am','뜻','우리말 뜻')}
+  <label class="block mb-3"><span class="text-sm font-medium">유래·해설 (선택)</span><textarea rows="3" oninput="A.form('au',this.value)" class="w-full mt-1 px-4 py-3 rounded-lg border border-[#C9D2CB] bg-white">${v('au')}</textarea></label>
+  ${S.err?`<p class="text-sm text-[#B3261E] mb-2" role="alert">${esc(S.err)}</p>`:''}${S.msg?`<p class="text-sm text-[#1F6F5C] mb-2">${esc(S.msg)}</p>`:''}
+  <button class="b bp w-full" onclick="A.adminAdd()">공용 단어로 추가</button></div>
+  <div class="grid grid-cols-2 gap-2 mb-5"><button class="b bp" onclick="A.adminExport()">shared-words.json 내보내기</button><button class="b" onclick="A.adminReset()">초안 초기화</button></div>
+  <h2 class="font-bold mb-2">공용 사자성어 (${SHARED.length})</h2><div class="space-y-2 mb-6">${sl||'<p class="text-slate-500 text-sm py-4 text-center">아직 없습니다.</p>'}</div>
+  <button class="b w-full" onclick="A.adminLogout()">관리자 모드 종료</button>`;
+}
+
+/* ===== 지우개 엔진: 렌더링과 무관한 순수 함수 (좌표 배열만 다룸) =====
+   Stroke = { id, color, width, points: [[x, y], ...] }   (좌표계: 논리 600×400)
+   strokes = Stroke[]  ← 지우개 함수는 항상 "새 배열"을 돌려주고, 바뀐 것이 없으면 같은 배열을 그대로 돌려줍니다. */
+const PEN_PX=6, ERASER_PX=24;                 /* 슬라이더 값 1.0 당 논리 px (펜: 굵기, 지우개: 지름) */
+const penWidth=v=>+(v*PEN_PX).toFixed(2);     /* 펜 두께 0.1~2.0 → 선 굵기(px) */
+const eraserRadius=v=>v*ERASER_PX/2;          /* 지우개 두께 0.1~2.0 → 반지름(px) */
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const clampSize=v=>Math.round(Math.min(2,Math.max(0.1,+v||1))*10)/10;
+
+function distToSeg(px,py,ax,ay,bx,by){        /* 점과 선분 사이의 최단 거리 */
+  const dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;
+  const t=l2?Math.min(1,Math.max(0,((px-ax)*dx+(py-ay)*dy)/l2)):0;
+  return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
+}
+
+/* [획 지우개] 판별: 터치 원(반지름 r)이 선(굵기 포함)을 스쳤는가 */
+function hitsStroke(st,x,y,r){
+  const p=st.points,reach=r+st.width/2;
+  if(p.length===1)return Math.hypot(x-p[0][0],y-p[0][1])<=reach;
+  for(let i=0;i<p.length-1;i++)if(distToSeg(x,y,p[i][0],p[i][1],p[i+1][0],p[i+1][1])<=reach)return true;
+  return false;
+}
+function eraseStrokeAt(strokes,x,y,r){        /* 스친 선은 통째로 삭제 */
+  const out=strokes.filter(s=>!hitsStroke(s,x,y,r));
+  return out.length===strokes.length?strokes:out;
+}
+
+/* [표준 지우개] 판별: 선을 원(반지름 r + 선굵기/2)과의 교점에서 잘라, 원 밖의 조각들만 남김 */
+function cutStroke(st,cx,cy,r){
+  const R=r+st.width/2,P=st.points,ins=(x,y)=>Math.hypot(x-cx,y-cy)<R,rd=v=>+v.toFixed(1);
+  if(P.length===1)return ins(P[0][0],P[0][1])?[]:[st];
+  const pieces=[];let cur=ins(P[0][0],P[0][1])?[]:[P[0]],cut=cur.length===0;
+  for(let i=0;i<P.length-1;i++){
+    const [ax,ay]=P[i],[bx,by]=P[i+1],dx=bx-ax,dy=by-ay,fx=ax-cx,fy=ay-cy;
+    const A=dx*dx+dy*dy,B=2*(fx*dx+fy*dy),C=fx*fx+fy*fy-R*R,D=B*B-4*A*C;
+    let t1=1,t2=0;                              /* 선분 위에서 원 안에 들어가는 구간 [t1,t2] */
+    if(A>0&&D>0){const q=Math.sqrt(D);t1=Math.max(0,(-B-q)/(2*A));t2=Math.min(1,(-B+q)/(2*A))}
+    if(!(t1<t2)){if(cur.length)cur.push(P[i+1]);continue}
+    cut=true;const at=t=>[rd(ax+dx*t),rd(ay+dy*t)];
+    if(t1>0){cur.push(at(t1));pieces.push(cur)}  /* 원 밖→안: 경계에서 조각 끝 */
+    cur=t2<1?[at(t2),P[i+1]]:[];                 /* 원 안→밖: 경계에서 새 조각 시작 */
+  }
+  if(cur.length)pieces.push(cur);
+  return cut?pieces.filter(p=>p.length>1).map(p=>({...st,id:uid(),points:p})):[st];
+}
+function eraseStandardAt(strokes,x,y,r){
+  let changed=false;const out=[];
+  for(const st of strokes){const res=cutStroke(st,x,y,r);if(res.length===1&&res[0]===st)out.push(st);else{changed=true;out.push(...res)}}
+  return changed?out:strokes;
+}
+
+/* 모드 분기 + 빠르게 쓸어도 빠뜨리지 않도록 이동 경로를 촘촘히 보간 */
+const eraseAt=(strokes,mode,x,y,r)=>mode==='stroke'?eraseStrokeAt(strokes,x,y,r):eraseStandardAt(strokes,x,y,r);
+function eraseAlong(strokes,mode,from,to,r){
+  const d=Math.hypot(to[0]-from[0],to[1]-from[1]),n=Math.max(1,Math.ceil(d/Math.max(1,r/2)));let s=strokes;
+  for(let k=1;k<=n;k++)s=eraseAt(s,mode,from[0]+(to[0]-from[0])*k/n,from[1]+(to[1]-from[1])*k/n,r);
+  return s;
+}
+
+/* 예전 저장 형식 {c,w,p,e}(지우개를 덧그린 방식) → 새 형식으로 변환 (예전 지우개 획은 표준 지우개로 다시 적용) */
+function normStrokes(arr){
+  let out=[];
+  for(const s of arr||[]){
+    if(s.points){out.push(s);continue}
+    if(s.e){let last=s.p[0];out=eraseAt(out,'standard',last[0],last[1],s.w/2);for(const q of s.p.slice(1)){out=eraseAlong(out,'standard',last,q,s.w/2);last=q}}
+    else out.push({id:uid(),color:s.c,width:s.w,points:s.p});
+  }
+  return out;
+}
+
+/* ===== 개인 메모 (펜 + 텍스트) ===== */
+function memoHtml(t){
+  const colors=[['#1B2A38','검정'],['#1D4ED8','파랑'],['#B3261E','빨강']];
+  const slider=(id,label,k,v)=>`<label class="flex items-center gap-2 text-sm"><span class="w-20 shrink-0">${label}</span><input type="range" min="0.1" max="2" step="0.1" value="${v}" aria-label="${label}" oninput="A.memoSize('${k}',this.value)" class="flex-1"><output id="${id}" class="w-8 text-right">${v.toFixed(1)}</output></label>`;
+  return `<div class="fixed inset-0 bg-black/50 z-30 flex items-end sm:items-center justify-center">
+  <div class="bg-white w-full max-w-xl max-h-[94vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl p-4" role="dialog" aria-modal="true" aria-label="개인 메모">
+    <div class="flex items-center justify-between mb-3"><h2 class="font-bold"><span class="han text-lg">${esc(MS.key)}</span> 메모</h2><button aria-label="메모 닫기" class="text-2xl px-2" onclick="A.memoClose()">✕</button></div>
+    <div class="flex gap-2 mb-3"><button id="mm-pen" class="b flex-1" onclick="A.memoMode('pen')">✏️ 펜</button><button id="mm-txt" class="b flex-1" onclick="A.memoMode('txt')">⌨️ 텍스트</button></div>
+    <div id="pp">
+      <div class="space-y-2 mb-2" role="toolbar" aria-label="펜 도구">
+        <div class="flex flex-wrap items-center gap-2">
+          ${colors.map(([c,n])=>`<button aria-label="${n} 펜" data-c="${c}" onclick="A.memoColor('${c}')" class="mc w-8 h-8 rounded-full border border-slate-300" style="background:${c}"></button>`).join('')}
+          <button id="mm-t-pen" class="b text-sm py-1" onclick="A.memoTool('pen')">✏️ 펜</button>
+          <button id="mm-t-standard" class="b text-sm py-1" onclick="A.memoTool('standard')">지우개</button>
+          <button id="mm-t-stroke" class="b text-sm py-1" onclick="A.memoTool('stroke')">획 지우개</button>
+        </div>
+        ${slider('pwv','펜 두께','pen',MS.pen)}${slider('ewv','지우개 두께','ers',MS.ers)}
+        <div class="flex gap-2"><button class="b text-sm py-1" onclick="A.memoUndo()">되돌리기</button><button class="b text-sm py-1" onclick="A.memoClear()">모두 지우기</button></div>
+      </div>
+      <canvas id="mc" width="1200" height="800" aria-label="손글씨 메모 영역" class="w-full rounded-lg border border-[#C9D2CB]" style="width:100%;height:auto;touch-action:none;user-select:none;background-image:linear-gradient(#E4E9E5 1px,transparent 1px);background-size:100% 10%"></canvas>
+    </div>
+    <div id="tp" class="hidden"><textarea id="mt" rows="10" aria-label="텍스트 메모" oninput="A.memoText()" placeholder="텍스트 메모를 입력하세요" class="w-full px-4 py-3 rounded-lg border border-[#C9D2CB]">${esc(t)}</textarea></div>
+    <p id="ms" role="status" class="text-xs text-slate-500 mt-2">변경 사항은 이 브라우저에 자동으로 저장됩니다.</p>
+  </div></div>`;
+}
+function memoUi(){
+  $('#pp').classList.toggle('hidden',MS.mode!=='pen');$('#tp').classList.toggle('hidden',MS.mode!=='txt');
+  [['#mm-pen',MS.mode==='pen'],['#mm-txt',MS.mode==='txt'],['#mm-t-pen',MS.tool==='pen'],['#mm-t-standard',MS.tool==='standard'],['#mm-t-stroke',MS.tool==='stroke']].forEach(([q,on])=>{const e=$(q);e.classList.toggle('on',on);e.setAttribute('aria-pressed',on)});
+  document.querySelectorAll('.mc').forEach(b=>b.classList.toggle('sel',MS.tool==='pen'&&b.dataset.c===MS.color));
+}
+function memoDraw(){
+  const c=MS.ctx;c.setTransform(2,0,0,2,0,0);c.clearRect(0,0,600,400);c.lineCap='round';c.lineJoin='round';
+  for(const st of MS.strokes){
+    c.strokeStyle=c.fillStyle=st.color;c.lineWidth=st.width;const p=st.points;
+    if(p.length===1){c.beginPath();c.arc(p[0][0],p[0][1],st.width/2,0,7);c.fill();continue}
+    c.beginPath();c.moveTo(p[0][0],p[0][1]);
+    for(let k=1;k<p.length-1;k++)c.quadraticCurveTo(p[k][0],p[k][1],(p[k][0]+p[k+1][0])/2,(p[k][1]+p[k+1][1])/2);
+    c.lineTo(p[p.length-1][0],p[p.length-1][1]);c.stroke();
+  }
+  if(MS.ring){c.strokeStyle='rgba(90,100,110,.9)';c.lineWidth=1;c.beginPath();c.arc(MS.ring[0],MS.ring[1],eraserRadius(MS.ers),0,7);c.stroke()}
+}
+function memoSave(){
+  if(MS.key===null)return;
+  const te=document.querySelector('#mt'),t=te?te.value:((MEMOS[MS.key]||{}).t||'');
+  if(!t.trim()&&!MS.strokes.length)delete MEMOS[MS.key];else MEMOS[MS.key]={t,s:MS.strokes,u:Date.now()};
+  let ok=true;try{localStorage.setItem('memos',JSON.stringify(MEMOS))}catch(e){ok=false}
+  const st=document.querySelector('#ms');if(st)st.textContent=ok?'저장됨':'저장하지 못했어요. 브라우저 저장 공간을 확인해 주세요.';
+}
+function memoCanvas(){
+  const cv=$('#mc');MS.cv=cv;MS.ctx=cv.getContext('2d');
+  const pt=e=>{const r=cv.getBoundingClientRect();return [+((e.clientX-r.left)*600/r.width).toFixed(1),+((e.clientY-r.top)*400/r.height).toFixed(1)]};
+  cv.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    if(cv.setPointerCapture)try{cv.setPointerCapture(e.pointerId)}catch(_){}
+    const p=pt(e);MS.snap=MS.strokes;
+    if(MS.tool==='pen'){MS.cur={id:uid(),color:MS.color,width:penWidth(MS.pen),points:[p]};MS.strokes=[...MS.strokes,MS.cur]}
+    else{MS.cur={last:p};MS.ring=p;MS.strokes=eraseAt(MS.strokes,MS.tool,p[0],p[1],eraserRadius(MS.ers))}
+    memoDraw();e.preventDefault();
+  });
+  cv.addEventListener('pointermove',e=>{
+    if(!MS.cur)return;
+    let evs=e.getCoalescedEvents?e.getCoalescedEvents():[];if(!evs.length)evs=[e];
+    for(const ev of evs){const p=pt(ev);
+      if(MS.tool==='pen'){const l=MS.cur.points[MS.cur.points.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])>=0.6)MS.cur.points.push(p)}
+      else{MS.strokes=eraseAlong(MS.strokes,MS.tool,MS.cur.last,p,eraserRadius(MS.ers));MS.cur.last=p;MS.ring=p}}
+    memoDraw();e.preventDefault();
+  });
+  const end=()=>{
+    if(!MS.cur)return;MS.cur=null;MS.ring=null;
+    if(MS.strokes!==MS.snap){MS.hist.push(MS.snap);if(MS.hist.length>50)MS.hist.shift()}   /* 실제로 바뀐 동작만 되돌리기 기록 */
+    memoDraw();memoSave();
+  };
+  cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  cv.addEventListener('contextmenu',e=>e.preventDefault());
+  memoDraw();
+}
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(DS.open)A.dictClose();else if(MS.key!==null)A.memoClose()});
+
+/* ===== 한자사전 모달 (앱 안에서 겹쳐 뜸) ===== */
+const DS={open:false,q:''};
+function dictResults(){
+  const q=DS.q.trim(),nq=norm(q);
+  const ids=I.map((x,i)=>i).filter(i=>!nq||norm(I[i].slice(0,3).join('')).includes(nq)).slice(0,100);
+  let cs=[];
+  if(nq){const hs=[...new Set([...nq].filter(isHanja))];cs=(hs.length?hs:Object.keys(CH).filter(c=>CH[c].split('|').slice(0,2).join(' ').includes(q))).slice(0,30)}
+  const chHtml=cs.map(c=>{const r=CH[c],[eum,mean,bu,st]=r?r.split('|'):[];
+    return `<div class="card p-3 flex items-center gap-3"><span class="han text-3xl">${c}</span><div class="flex-1 text-sm">${r?`${esc(mean)} · 음 ${esc(eum)}<br><span class="text-slate-500">부수 <span class="han">${bu}</span> · ${st}획</span>`:'<span class="text-slate-500">내장 사전에 없는 글자입니다.</span>'}</div><a href="${NAVER+encodeURIComponent(c)}" target="_blank" rel="noopener noreferrer" class="text-xs underline text-[#1F6F5C]">네이버에서 더 보기</a></div>`}).join('');
+  const idHtml=ids.map(i=>`<button class="card p-3 w-full text-left" onclick="A.dictPick(${i})"><span class="han text-lg font-bold">${I[i][0]}</span> <span class="text-sm text-slate-600 ml-1">${esc(I[i][1])}</span><span class="block text-xs text-slate-500 mt-1">${esc(I[i][2])}</span></button>`).join('');
+  return (cs.length?`<h3 class="font-bold text-sm mt-2 mb-2">한자 (${cs.length})</h3><div class="space-y-2">${chHtml}</div>`:'')
+    +`<h3 class="font-bold text-sm mt-4 mb-2">사자성어 (${ids.length})</h3><div class="space-y-2">${idHtml||'<p class="text-slate-500 text-sm py-4 text-center">검색 결과가 없습니다.</p>'}</div>`
+    +(q?`<p class="text-center mt-4"><a href="${NAVER+encodeURIComponent(q)}" target="_blank" rel="noopener noreferrer" class="text-sm underline text-[#1F6F5C]">네이버 한자사전에서 “${esc(q)}” 검색</a></p>`:'');
+}
+function dictHtml(){
+  return `<div class="fixed inset-0 bg-black/50 z-40 flex items-end sm:items-center justify-center" onpointerdown="if(event.target===this)A.dictClose()">
+  <div class="bg-white w-full max-w-xl h-[85vh] flex flex-col rounded-t-2xl sm:rounded-2xl" role="dialog" aria-modal="true" aria-label="한자사전">
+    <div class="flex items-center gap-2 p-4 border-b border-[#C9D2CB]"><h2 class="font-bold">📖 한자사전</h2><button aria-label="한자사전 닫기" class="ml-auto text-2xl px-2" onclick="A.dictClose()">✕</button></div>
+    <div class="p-4 pb-2"><input id="dq" type="search" value="${esc(DS.q)}" oninput="A.dictQ(this.value)" placeholder="한자·사자성어·독음·뜻 (예: 千載一遇, 천재일우, 일)" aria-label="한자 또는 사자성어 검색" class="w-full px-4 py-3 rounded-lg border border-[#C9D2CB]"></div>
+    <div id="dres" class="flex-1 overflow-y-auto px-4 pb-4" aria-live="polite">${dictResults()}</div>
+  </div></div>`;
+}
+
+/* ===== 한자 상세 모달 ===== */
+function vModal(){
+  const [h,r,m,u]=I[S.open];
+  const chars=[...h].map(c=>`<div class="flex flex-col items-center">${hLink(c,'han text-5xl px-1 rounded hover:bg-slate-100')}<button onclick="A.ch('${c}')" class="text-xs mt-1 px-2 py-0.5 rounded border ${S.ch&&S.ch.ch===c?'bg-[#1F6F5C] text-white border-[#1F6F5C]':'border-[#C9D2CB] text-slate-600'}">음·뜻</button></div>`).join('');
+  let d='<p class="text-sm text-slate-500">글자를 누르면 한자사전이 열리고, ‘음·뜻’ 버튼을 누르면 이 앱의 음·부수·획수·뜻을 볼 수 있어요.</p>';
+  if(S.ch) d=S.ch.eum?`<dl class="grid grid-cols-[3.5rem_1fr] gap-y-1 text-sm"><dt class="text-slate-500">한자</dt><dd class="han text-xl">${S.ch.ch}</dd><dt class="text-slate-500">음</dt><dd>${S.ch.eum}</dd><dt class="text-slate-500">뜻</dt><dd>${S.ch.mean}</dd><dt class="text-slate-500">부수</dt><dd class="han">${S.ch.bu}</dd><dt class="text-slate-500">획수</dt><dd>${S.ch.st}획</dd></dl>`:'<p class="text-sm">내장 한자 사전에 없는 글자입니다. lookupHanja()에 사전 API를 연결하면 이 정보가 표시됩니다.</p>';
+  return `<div class="fixed inset-0 bg-black/40 z-20 flex items-end sm:items-center justify-center" onclick="A.close()">
+  <div class="bg-white w-full max-w-xl max-h-[88vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl p-5" onclick="event.stopPropagation()">
+    <div class="flex justify-between items-start gap-2"><div class="flex items-start gap-3 min-w-0">${BACK}<div><div class="han text-4xl font-bold">${h}</div><div class="text-lg mt-1 flex flex-wrap items-center gap-x-3"><span>${r}</span><button class="text-sm text-[#1F6F5C] underline" onclick="A.dict('${h}')">사자성어 한자사전</button></div></div></div>
+    <div><button class="text-3xl px-2 ${S.bm.has(S.open)?'text-[#B3261E]':'text-slate-400'}" onclick="A.bm(${S.open})">${star(S.open)}</button><button class="text-2xl px-2" aria-label="닫기" onclick="A.close()">✕</button></div></div>
+    <h3 class="font-bold mt-4 mb-1">한자 하나씩 보기</h3><div class="flex flex-wrap gap-3 mb-2">${chars}</div><div class="card p-3 bg-[#F6F8F6]">${d}</div>
+    <button class="b w-full mt-3 text-sm" onclick="A.memo(${S.open})">📝 개인 메모${MEMOS[h]?' (작성됨)':''}</button>
+    <h3 class="font-bold mt-4 mb-1">뜻</h3><p>${m}</p>
+    <h3 class="font-bold mt-4 mb-1">유래·해설</h3><p class="leading-relaxed">${u}</p></div></div>`;
+}
+
+/* ===== 플래시카드 학습 ===== */
+function vStudy(){
+  const s=S.study, i=s.ids[s.i], [h,r,m,u]=I[i];
+  return `<div class="flex justify-between items-center mb-3"><span class="font-medium">${s.i+1} / ${s.ids.length}</span><button class="b text-sm" onclick="A.endStudy()">학습 종료</button></div>
+  <div class="card p-6 text-center min-h-[18rem] flex flex-col justify-center cursor-pointer" onclick="A.flip()">
+    <div class="han text-5xl font-bold mb-4">${hLinks(h)}</div>
+    ${s.flip?`<div class="text-xl mb-3">${r}</div><p class="mb-3">${m}</p><p class="text-sm text-slate-600 text-left leading-relaxed">${u}</p>`:'<p class="text-slate-400">카드를 눌러 뜻 확인<br><span class="text-xs">한자를 누르면 한자사전이 열립니다</span></p>'}
+  </div>
+  <div class="grid grid-cols-4 gap-2 mt-3"><button class="b" onclick="A.mv(-1)">이전</button><button class="b" onclick="A.mv(1)">다음</button>
+    <button class="b" onclick="A.reshuf()">섞기</button><button class="b ${S.bm.has(i)?'text-[#B3261E]':''}" onclick="A.bm(${i})">${star(i)} 북마크</button></div>`;
+}
+
+/* ===== 퀴즈 ===== */
+function pool(){return S.cfg.scope==='sel'?[...S.sel]:S.cfg.scope==='bm'?[...S.bm]:I.map((_,i)=>i)}
+function vQuiz(){
+  const q=S.quiz, c=S.cfg;
+  const seg=(k,opts)=>`<div class="flex flex-wrap gap-2 mb-4">${opts.map(([v,l])=>`<button class="b ${c[k]===v?'on':''}" onclick="A.cfg('${k}','${v}')">${l}</button>`).join('')}</div>`;
+  if(!q){
+    const n=pool().length;
+    return `<h2 class="font-bold mb-2">퀴즈 유형</h2>${seg('type',[['mix','섞어서'],['mc','뜻→객관식'],['sub','뜻→주관식'],['blank','빈칸 채우기']])}
+    <h2 class="font-bold mb-2">범위</h2>${seg('scope',[['all','전체'],['sel','선택 항목('+S.sel.size+')'],['bm','북마크('+S.bm.size+')']])}
+    <h2 class="font-bold mb-2">문제 수</h2>${seg('n',[['5','5'],['10','10'],['99','범위 전체']])}
+    <p class="text-sm text-slate-600 mb-3">출제 대상 ${n}개${n?'':' — 범위에 항목이 없습니다. 학습 선택 탭에서 고르거나 전체를 선택하세요.'}</p>
+    <button class="b bp w-full py-3" ${n?'':'disabled style="opacity:.4"'} onclick="A.start()">퀴즈 시작</button>`;
+  }
+  if(q.done){
+    return `<div class="card p-5 text-center mb-4"><div class="text-sm text-slate-500">점수</div><div class="text-4xl font-bold">${q.score} / ${q.qs.length}</div></div>
+    <div class="space-y-2 mb-4">${q.qs.map((Q,k)=>`<div class="card p-3 ${Q.ok?'ok':'no'}"><div class="text-sm">${k+1}. ${Q.ok?'정답':'오답'} · ${Q.t==='blank'?hLinks(Q.p):esc(Q.p)}</div><div class="text-sm mt-1">정답: <b class="han">${hLinks(Q.show)}</b>${Q.ok?'':` / 내 답: ${esc(Q.us)}`}</div></div>`).join('')}</div>
+    <div class="grid grid-cols-1 gap-2"><button class="b" onclick="A.wrongBm()">틀린 문제 북마크에 담기</button><button class="b bp" onclick="A.start()">같은 설정으로 다시 풀기</button><button class="b" onclick="A.reset()">설정으로 돌아가기</button></div>`;
+  }
+  const Q=q.qs[q.i], done=Q.u!==undefined;
+  let body='';
+  if(Q.t==='sub') body=`<input id="ans" ${done?'disabled':''} value="${done?esc(Q.us):''}" onkeydown="if(event.key==='Enter')A.sub()" placeholder="한자 또는 한글 독음 입력" class="w-full px-4 py-3 rounded-lg border border-[#C9D2CB] bg-white han text-lg mb-2">${done?'':'<button class="b bp w-full" onclick="A.sub()">제출</button>'}`;
+  else body=`<div class="grid grid-cols-2 gap-2">${Q.o.map((o,k)=>{const lab=Q.t==='mc'?`<span class="han text-lg">${I[o][0]}</span><span class="block text-xs text-slate-500">${I[o][1]}</span>`:`<span class="han text-3xl">${o}</span>`;const cls=!done?'':(o===Q.a?'ok':(k===Q.sel?'no':''));return `<button class="b py-3 ${cls}" ${done?'disabled':''} onclick="A.pick(${k})">${lab}</button>`}).join('')}</div>`;
+  return `<div class="flex justify-between mb-3 text-sm"><span>${q.i+1} / ${q.qs.length}</span><span>${{mc:'객관식',sub:'주관식',blank:'빈칸 채우기'}[Q.t]}</span></div>
+  <div class="card p-5 mb-3"><p class="${Q.t==='blank'?'han text-3xl text-center font-bold':''}">${Q.t==='blank'?hLinks(Q.p):esc(Q.p)}</p>${Q.t==='blank'?`<p class="text-sm text-slate-600 text-center mt-3">${esc(Q.hint)}</p>`:''}</div>${body}
+  ${done?`<div class="card p-3 mt-3 ${Q.ok?'ok':'no'}">${Q.ok?'정답입니다!':'오답입니다.'} 정답: <b class="han">${hLinks(Q.show)}</b></div><button class="b bp w-full mt-3" onclick="A.next()">${q.i+1<q.qs.length?'다음 문제':'결과 보기'}</button>`:''}`;
+}
+function buildQ(i,type){
+  const [h,r,m]=I[i], t=type==='mix'?['mc','sub','blank'][Math.random()*3|0]:type;
+  if(t==='mc'){const o=shuf([i,...shuf(I.map((_,k)=>k).filter(k=>k!==i)).slice(0,3)]);return{t,p:m,a:i,o,show:`${h} (${r})`};}
+  if(t==='sub') return{t,p:m,h,r,show:`${h} (${r})`};
+  const pos=Math.random()*h.length|0, c=h[pos], p=[...h].map((x,k)=>k===pos?'( )':x).join('');
+  const o=shuf([c,...shuf([...new Set([...Object.keys(CH),...(I.map(x=>x[0]).join('').match(/[\u3400-\u9FFF]/g)||[])])].filter(x=>x!==c)).slice(0,3)]);
+  return{t,p,hint:`뜻: ${m}`,a:c,o,show:`${c} → ${h} (${r})`};
+}
+
+/* ===== 동작 ===== */
+const A={
+  tab(t){S.tab=t;S.study=null;S.err='';S.msg='';render()},
+  q(v){S.q=v;$('#list').innerHTML=listHtml()},
+  home(){ /* 처음 화면(단어장)으로: 퀴즈·학습·상세창·메모창 종료, 북마크/선택 항목은 유지 */
+    A.dictClose();A.memoClose(true);S.open=null;S.ch=null;S.study=null;S.quiz=null;S.tab='dict';S.err='';S.msg='';render();window.scrollTo(0,0);
+  },
+  memo(i){
+    MS.key=I[i][0];const m=MEMOS[MS.key]||{};
+    MS.strokes=normStrokes(JSON.parse(JSON.stringify(m.s||[])));MS.hist=[];MS.cur=null;MS.ring=null;MS.tool='pen';MS.mode='pen';
+    $('#memo').innerHTML=memoHtml(m.t||'');memoCanvas();memoUi();
+  },
+  memoClose(quiet){
+    if(MS.key===null)return;clearTimeout(memoT);memoSave();MS.key=null;MS.cur=null;$('#memo').innerHTML='';if(!quiet)render();
+  },
+  memoMode(m){MS.mode=m;memoUi()},
+  memoColor(c){MS.color=c;MS.tool='pen';memoUi()},
+  memoTool(t){MS.tool=t;memoUi()},
+  memoSize(k,v){v=clampSize(v);if(k==='pen')MS.pen=v;else MS.ers=v;$(k==='pen'?'#pwv':'#ewv').textContent=v.toFixed(1)},
+  memoUndo(){if(!MS.hist.length)return;MS.strokes=MS.hist.pop();memoDraw();memoSave()},
+  memoClear(){   /* 확인창(confirm) 없이 바로 지우고, "되돌리기"로 복구 — 앱 내 브라우저에서 confirm이 막혀도 동작 */
+    if(!MS.strokes.length)return;MS.hist.push(MS.strokes);MS.strokes=[];memoDraw();memoSave();
+    $('#ms').textContent='모두 지웠어요. "되돌리기"로 복구할 수 있어요.';
+  },
+  memoText(){clearTimeout(memoT);memoT=setTimeout(memoSave,400)},
+  dict(q){DS.open=true;DS.q=q||'';$('#dict').innerHTML=dictHtml();const el=$('#dq');if(!q&&el&&el.focus)el.focus()},
+  dictQ(v){DS.q=v;$('#dres').innerHTML=dictResults()},
+  dictClose(){if(!DS.open)return;DS.open=false;$('#dict').innerHTML=''},
+  dictPick(i){A.dictClose();A.open(i)},
+  open(i){S.open=i;S.ch=null;render()},
+  close(){S.open=null;S.ch=null;render()},
+  async ch(c){S.ch=await lookupHanja(c)||{ch:c};render()},
+  bm(i){S.bm.has(i)?S.bm.delete(i):S.bm.add(i);save();render()},
+  sel(i){S.sel.has(i)?S.sel.delete(i):S.sel.add(i);save();render()},
+  all(on){S.sel=on?new Set(I.map((_,i)=>i)):new Set();save();render()},
+  study(src){const ids=src==='sel'?[...S.sel]:[...S.bm];S.study={ids:shuf(ids),i:0,flip:false};render()},
+  endStudy(){S.study=null;render()},
+  flip(){S.study.flip=!S.study.flip;render()},
+  mv(d){const s=S.study;s.i=(s.i+d+s.ids.length)%s.ids.length;s.flip=false;render()},
+  reshuf(){S.study.ids=shuf(S.study.ids);S.study.i=0;S.study.flip=false;render()},
+  goQuiz(sc){S.cfg.scope=sc;S.quiz=null;S.study=null;S.tab='quiz';render()},
+  cfg(k,v){S.cfg[k]=k==='n'?+v:v;render()},
+  start(){const ids=shuf(pool()).slice(0,S.cfg.n);S.quiz={qs:ids.map(i=>({...buildQ(i,S.cfg.type),i})),i:0,score:0,done:false};render()},
+  reset(){S.quiz=null;render()},
+  pick(k){const Q=S.quiz.qs[S.quiz.i];if(Q.u!==undefined)return;Q.sel=k;Q.u=Q.o[k];Q.us=Q.t==='mc'?I[Q.u][0]:Q.u;Q.ok=Q.u===Q.a;if(Q.ok)S.quiz.score++;render()},
+  sub(){const Q=S.quiz.qs[S.quiz.i];if(Q.u!==undefined)return;const v=$('#ans').value.trim();if(!v)return;Q.u=v;Q.us=v;Q.ok=norm(v)===norm(Q.h)||norm(v)===norm(Q.r);if(Q.ok)S.quiz.score++;render()},
+  next(){const q=S.quiz;q.i++;if(q.i>=q.qs.length){q.i=q.qs.length-1;q.done=true}render()},
+  form(k,v){S.form[k]=v},
+  err(m){S.err=m;S.msg='';render()},
+  adminLogin(){
+    if(S.admin){A.tab('admin');return}
+    const pw=prompt('관리자 비밀번호');if(pw===null)return;
+    if(pw!==ADMIN_PW){alert('비밀번호가 맞지 않습니다.');return}
+    S.admin=true;ssSet('adm','1');
+    const dr=ld('sharedDraft',null);if(Array.isArray(dr)){SHARED=dr.filter(okEntry);rebuild()}
+    A.tab('admin');
+  },
+  adminLogout(){ssSet('adm','0');location.reload()},
+  adminAdd(){
+    const f=S.form,h=(f.ah||'').replace(/\s/g,''),r=(f.ar||'').trim(),m=(f.am||'').trim(),u=(f.au||'').trim();
+    if(!/^[\u3400-\u4DBF\u4E00-\u9FFF]{2,8}$/.test(h))return A.err('사자성어는 한자 2~8자로 입력하세요.');
+    if(!r)return A.err('독음을 입력하세요.');
+    if(!m)return A.err('뜻을 입력하세요.');
+    if(I.some(x=>x[0]===h))return A.err('이미 공용·기본 목록에 있는 사자성어입니다.');
+    SHARED.push([h,r,m,u||'등록된 유래·해설이 없습니다.']);sv('sharedDraft',SHARED);rebuild();
+    S.form={};S.err='';S.msg='"'+h+'"을(를) 공용 초안에 추가했어요. 내보내기 후 업로드하면 모두에게 보입니다.';render();
+  },
+  adminDel(i){
+    if(!confirm('"'+I[i][0]+'"을(를) 공용 목록에서 삭제할까요?'))return;
+    const k=I[i][0];SHARED=SHARED.filter(x=>x[0]!==k);sv('sharedDraft',SHARED);rebuild();S.quiz=null;S.open=null;S.study=null;save();render();
+  },
+  adminExport(){
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([JSON.stringify(SHARED,null,1)],{type:'application/json'}));
+    a.download='shared-words.json';a.click();URL.revokeObjectURL(a.href);
+  },
+  adminReset(){
+    if(!confirm('이 브라우저의 초안을 지우고 서버의 shared-words.json 상태로 되돌릴까요?'))return;
+    try{localStorage.removeItem('sharedDraft')}catch(e){}location.reload();
+  },
+  wrongBm(){S.quiz.qs.forEach(Q=>{if(!Q.ok)S.bm.add(Q.i)});save();render();alert('틀린 문제를 북마크에 담았어요.')}
+};
+
+function render(){
+  $('#app').innerHTML=S.study?vStudy():({dict:vDict,pick:vPick,quiz:vQuiz,bm:vBm,admin:vAdmin}[S.tab])();
+  $('#nav').style.gridTemplateColumns='repeat('+(S.admin?5:4)+',minmax(0,1fr))';
+  $('#nav').innerHTML=[['dict','단어장'],['pick','학습 선택'],['quiz','퀴즈 풀기'],['bm','북마크('+S.bm.size+')'],...(S.admin?[['admin','관리자']]:[])]
+    .map(([k,l])=>`<button onclick="A.tab('${k}')" class="py-4 text-xs font-medium ${S.tab===k?'text-[#1F6F5C] border-t-2 border-[#1F6F5C] -mt-px':'text-slate-500'}">${l}</button>`).join('');
+  $('#modal').innerHTML=S.open!==null?vModal():'';
+  $('#back').innerHTML=(S.study||S.quiz)?BACK:'';
+}
+/* 공용 단어(shared-words.json) 불러오기: HTML과 같은 위치에 파일이 있고 http(s)로 열었을 때 동작 */
+async function loadShared(){
+  try{
+    const ac=new AbortController(),t=setTimeout(()=>ac.abort(),3000);
+    const res=await fetch('shared-words.json',{cache:'no-cache',signal:ac.signal});clearTimeout(t);
+    if(res.ok){const d=await res.json();if(Array.isArray(d))SHARED=d.filter(okEntry).map(x=>[x[0],x[1],x[2],x[3]||'']);}
+  }catch(e){}
+  if(S.admin){const dr=ld('sharedDraft',null);if(Array.isArray(dr))SHARED=dr.filter(okEntry);}
+}
+$('#app').innerHTML='<p class="text-center text-slate-500 py-12">불러오는 중…</p>';
+loadShared().finally(()=>{
+  I=buildI();
+  const toSet=a=>new Set((a||[]).map(v=>typeof v==='number'?(OLD[v]||[])[0]:v).map(k=>I.findIndex(x=>x[0]===k)).filter(i=>i>=0));
+  S.sel=toSet(ld('sel',[]));S.bm=toSet(ld('bm',[]));render();
+});
+</script>
+</body>
+</html>
