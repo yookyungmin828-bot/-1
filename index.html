@@ -69,6 +69,37 @@ const BASE=[
 ['風前燈火','풍전등화','바람 앞의 등불이라는 뜻으로, 매우 위태로운 처지.','특정 고사나 출전은 확인되지 않았습니다. 바람 앞에 놓인 등불처럼 곧 꺼질 듯 위태로운 상황을 말합니다.'],
 ['狐假虎威','호가호위','여우가 호랑이의 위세를 빌려 으스댄다는 뜻으로, 남의 권세를 빌려 위세를 부림.','『전국책』 초책에 나옵니다. 강을이 초나라 선왕에게, 여우가 호랑이를 앞세워 다른 짐승들이 도망치게 만든 이야기를 들어 소해휼이 왕의 위세를 빌리고 있다고 비유했습니다.']
 ];
+/* 교재의 겉뜻·속뜻 (겉뜻 = 첫 문장, 속뜻 = 그 뒤 문장). 여기에 있는 사자성어는 화면에 "겉뜻/속뜻"으로 표시되고 유래는 쓰지 않습니다. 속뜻이 '' 이면 속뜻 칸을 숨깁니다. */
+const INNER={
+'甘言利說':['달콤한 말과 이로운 이야기.','귀가 솔깃하도록 남의 비위를 맞추거나 이로운 조건을 내세워 꾀는 말.'],
+'甘吞苦吐':['달면 삼키고 쓰면 뱉음.','자신의 비위에 따라서 사리의 옳고 그름을 판단함.'],
+'結草報恩':['풀을 묶어서 은혜를 갚음.','죽어 혼이 되더라도 은혜를 잊지 않고 갚음.'],
+'孤立無援':['외로이 서 있어 도움을 받을 데가 없음.',''],
+'苦盡甘來':['쓴 것이 다하면 단 것이 옴.','고생 끝에 즐거움이 옴.'],
+'群鷄一鶴':['닭의 무리 가운데에서 한 마리의 학.','많은 사람 가운데서 뛰어난 인물.'],
+'累卵之勢':['층층이 쌓아 놓은 알의 형세.','몹시 위태로운 형세.'],
+'東問西答':['동쪽을 묻는데 서쪽을 대답함.','물음과는 전혀 상관없는 엉뚱한 대답.'],
+'同病相憐':['같은 병을 앓는 사람끼리 서로 가엾게 여김.','어려운 처지에 있는 사람끼리 서로 불쌍히 여겨 서로 도움.'],
+'同床異夢':['같은 자리에 자면서 다른 꿈을 꿈.','겉으로는 같이 행동하면서도 속으로는 각각 딴 생각을 하고 있음.'],
+'傍若無人':['곁에 아무도 없는 것처럼 여김.','다른 사람은 전혀 의식하지 않고 아무 거리낌 없이 함부로 말하고 행동함.'],
+'事必歸正':['일은 반드시 바른길로 돌아감.','무슨 일이든 반드시 옳은 이치대로 돌아감.'],
+'塞翁之馬':['변방에 사는 노인의 말.','인생의 길흉화복은 변화가 많아서 예측하기가 어려움.'],
+'手不釋卷':['손에서 책을 놓지 않음.','손에서 책을 놓지 않고 늘 글을 읽으며 학문을 열심히 함.'],
+'言中有骨':['말 속에 뼈가 있음.',''],
+'類類相從':['같은 무리끼리 서로 사귐.',''],
+'以心傳心':['마음으로 마음을 전달함.','마음과 마음으로 서로 뜻이 통함.'],
+'以熱治熱':['열은 열로써 다스림.','힘에는 힘으로, 강한 것에는 강한 것으로 상대함. 열이 날 때에 땀을 내는 상황 등을 이를 때에 쓰는 말.'],
+'轉禍爲福':['화가 바뀌어 오히려 복이 됨.','재앙과 근심, 걱정이 바뀌어 오히려 복이 됨.'],
+'千載一遇':['천 년에 한 번 만남.','좀처럼 만나기 어려운 좋은 기회.'],
+'寸鐵殺人':['한 치의 쇠붙이로도 사람을 죽일 수 있다는 뜻으로, 간단한 말로도 남을 감동하게 하거나 남의 약점을 찌를 수 있음을 이르는 말.',''],
+'針小棒大':['바늘만 한 것을 몽둥이만 하다고 말함.','작은 일을 크게 불리어 떠벌림.'],
+'表裏不同':['겉과 속이 같지 않음.','겉으로 드러나는 언행과 속으로 가지는 생각이 다름.'],
+'風前燈火':['바람 앞의 등불.','사물이 매우 위태로운 처지에 놓여 있음을 비유적으로 이르는 말.'],
+'狐假虎威':['남의 권세를 빌려 위세를 부림.','『전국책(戰國策)』의 『초책(楚策)』에 나오는 말로 여우가 호랑이의 위세를 빌려 호기를 부린다는 데에서 유래함.']
+};
+/* 표시 순서: 사진 속 목록 25개를 아래 순서(가나다순)로 먼저, 나머지는 독음 가나다순으로 뒤에 둡니다. 순서를 바꾸려면 이 목록(독음)만 고치세요. */
+const ORDER_KO=['감언이설','감탄고토','결초보은','고립무원','고진감래','군계일학','누란지세','동문서답','동병상련','동상이몽','방약무인','사필귀정','새옹지마','수불석권','언중유골','유유상종','이심전심','이열치열','전화위복','천재일우','촌철살인','침소봉대','표리부동','풍전등화','호가호위'];
+BASE.sort((a,b)=>{const i=ORDER_KO.indexOf(a[1]),j=ORDER_KO.indexOf(b[1]);if(i>=0&&j>=0)return i-j;if(i>=0)return -1;if(j>=0)return 1;return a[1].localeCompare(b[1],'ko')});
 /* 한자 데이터: '음|훈(뜻)|부수|획수'. 실제 사전 API를 쓸 때는 lookupHanja()만 교체하면 됩니다. */
 const CH={
 '甘':'감|달 감|甘|5','言':'언|말씀 언|言|7','利':'리(이)|이로울 리|刀|7','說':'설(세·열)|말씀 설|言|14',
@@ -112,11 +143,11 @@ const ADMIN_PW='change-me'; /* ★ 관리자 비밀번호: 배포 전에 반드�
 const ss=k=>{try{return sessionStorage.getItem(k)}catch(e){return null}};
 const ssSet=(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}};
 let SHARED=[];
-const OLD=BASE.slice(0,15); /* 예전 저장 형식(번호) 이전용: 최초 15개의 순서 */
+const OLD=['甘言利說','苦盡甘來','累卵之勢','塞翁之馬','轉禍爲福','臥薪嘗膽','結草報恩','刻舟求劍','漁父之利','守株待兔','他山之石','雪上加霜','大器晩成','螢雪之功','管鮑之交'].map(k=>[k]); /* 예전 저장 형식(번호) 이전용: 최초 15개의 원래 순서(고정) */
 const okEntry=x=>Array.isArray(x)&&x.length>=3&&/^[\u3400-\u4DBF\u4E00-\u9FFF]{2,8}$/.test(String(x[0]))&&[x[1],x[2]].every(t=>typeof t==='string'&&t.trim());
 /* 목록 = 기본(b) + 관리자 공용(s), 한자 중복은 앞선 것만 사용 */
 function buildI(){const seen=new Set(),out=[];
-  [[BASE,'b'],[SHARED,'s']].forEach(([arr,o])=>arr.forEach(x=>{if(!seen.has(x[0])){seen.add(x[0]);out.push([x[0],x[1],x[2],x[3]||'등록된 유래·해설이 없습니다.',o])}}));
+  [[BASE,'b'],[SHARED,'s']].forEach(([arr,o])=>arr.forEach(x=>{if(!seen.has(x[0])){seen.add(x[0]);{const n=INNER[x[0]];out.push([x[0],x[1],n?n[0]:x[2],n?n[1]:(x[3]||'등록된 유래·해설이 없습니다.'),o])}}}));
   return out}
 let I=buildI();
 function rebuild(){
@@ -374,8 +405,8 @@ function vModal(){
     <div><button class="text-3xl px-2 ${S.bm.has(S.open)?'text-[#B3261E]':'text-slate-400'}" onclick="A.bm(${S.open})">${star(S.open)}</button><button class="text-2xl px-2" aria-label="닫기" onclick="A.close()">✕</button></div></div>
     <h3 class="font-bold mt-4 mb-1">한자 하나씩 보기</h3><div class="flex flex-wrap gap-3 mb-2">${chars}</div><div class="card p-3 bg-[#F6F8F6]">${d}</div>
     <button class="b w-full mt-3 text-sm" onclick="A.memo(${S.open})">📝 개인 메모${MEMOS[h]?' (작성됨)':''}</button>
-    <h3 class="font-bold mt-4 mb-1">뜻</h3><p>${m}</p>
-    <h3 class="font-bold mt-4 mb-1">유래·해설</h3><p class="leading-relaxed">${u}</p></div></div>`;
+    <h3 class="font-bold mt-4 mb-1">${INNER[h]?'겉뜻':'뜻'}</h3><p>${m}</p>
+    ${INNER[h]&&!u?'':`<h3 class="font-bold mt-4 mb-1">${INNER[h]?'속뜻':'유래·해설'}</h3><p class="leading-relaxed">${u}</p>`}</div></div>`;
 }
 
 /* ===== 플래시카드 학습 ===== */
@@ -384,7 +415,7 @@ function vStudy(){
   return `<div class="flex justify-between items-center mb-3"><span class="font-medium">${s.i+1} / ${s.ids.length}</span><button class="b text-sm" onclick="A.endStudy()">학습 종료</button></div>
   <div class="card p-6 text-center min-h-[18rem] flex flex-col justify-center cursor-pointer" onclick="A.flip()">
     <div class="han text-5xl font-bold mb-4">${hLinks(h)}</div>
-    ${s.flip?`<div class="text-xl mb-3">${r}</div><p class="mb-3">${m}</p><p class="text-sm text-slate-600 text-left leading-relaxed">${u}</p>`:'<p class="text-slate-400">카드를 눌러 뜻 확인<br><span class="text-xs">한자를 누르면 한자사전이 열립니다</span></p>'}
+    ${s.flip?`<div class="text-xl mb-3">${r}</div><p class="mb-3">${INNER[h]?'<b class="text-xs text-slate-500 mr-1">겉뜻</b>':''}${m}</p>${INNER[h]&&!u?'':`<p class="text-sm text-slate-600 text-left leading-relaxed">${INNER[h]?'<b class="text-xs mr-1">속뜻</b>':''}${u}</p>`}`:'<p class="text-slate-400">카드를 눌러 뜻 확인<br><span class="text-xs">한자를 누르면 한자사전이 열립니다</span></p>'}
   </div>
   <div class="grid grid-cols-4 gap-2 mt-3"><button class="b" onclick="A.mv(-1)">이전</button><button class="b" onclick="A.mv(1)">다음</button>
     <button class="b" onclick="A.reshuf()">섞기</button><button class="b ${S.bm.has(i)?'text-[#B3261E]':''}" onclick="A.bm(${i})">${star(i)} 북마크</button></div>`;
@@ -396,10 +427,10 @@ function vQuiz(){
   const q=S.quiz, c=S.cfg;
   const seg=(k,opts)=>`<div class="flex flex-wrap gap-2 mb-4">${opts.map(([v,l])=>`<button class="b ${c[k]===v?'on':''}" onclick="A.cfg('${k}','${v}')">${l}</button>`).join('')}</div>`;
   if(!q){
-    const n=pool().length;
+    const n=pool().length,cn=Math.max(1,Math.min(S.cfg.n,n||1));
     return `<h2 class="font-bold mb-2">퀴즈 유형</h2>${seg('type',[['mix','섞어서'],['mc','뜻→객관식'],['sub','뜻→주관식'],['blank','빈칸 채우기']])}
     <h2 class="font-bold mb-2">범위</h2>${seg('scope',[['all','전체'],['sel','선택 항목('+S.sel.size+')'],['bm','북마크('+S.bm.size+')']])}
-    <h2 class="font-bold mb-2">문제 수</h2>${seg('n',[['5','5'],['10','10'],['99','범위 전체']])}
+    <h2 class="font-bold mb-2">문제 수</h2><div class="flex items-center gap-3 mb-1"><input id="cn-r" type="range" min="1" max="${n||1}" step="1" value="${cn}" ${n?'':'disabled'} aria-label="문제 수 조절 (드래그)" oninput="A.cnt(this.value,'r')" class="flex-1 accent-[#1F6F5C]"><label class="flex items-center gap-1 text-sm shrink-0"><input id="cn-n" type="number" min="1" max="${n||1}" step="1" value="${cn}" ${n?'':'disabled'} inputmode="numeric" aria-label="문제 수 직접 입력" oninput="A.cnt(this.value,'n')" onchange="A.cnt(this.value,'c')" class="w-20 px-3 py-2 rounded-lg border border-[#C9D2CB] bg-white text-center">문제</label></div>${n?`<p class="text-xs text-slate-500 mb-4">1 ~ ${n}문제 · 슬라이더를 끝까지 끌면 범위 전체</p>`:'<div class="mb-4"></div>'}
     <p class="text-sm text-slate-600 mb-3">출제 대상 ${n}개${n?'':' — 범위에 항목이 없습니다. 학습 선택 탭에서 고르거나 전체를 선택하세요.'}</p>
     <button class="b bp w-full py-3" ${n?'':'disabled style="opacity:.4"'} onclick="A.start()">퀴즈 시작</button>`;
   }
@@ -466,8 +497,16 @@ const A={
   mv(d){const s=S.study;s.i=(s.i+d+s.ids.length)%s.ids.length;s.flip=false;render()},
   reshuf(){S.study.ids=shuf(S.study.ids);S.study.i=0;S.study.flip=false;render()},
   goQuiz(sc){S.cfg.scope=sc;S.quiz=null;S.study=null;S.tab='quiz';render()},
+  cnt(v,src){   /* 문제 수: 슬라이더('r')·숫자칸('n' 입력 중, 'c' 입력 완료) 서로 맞춰 줌 */
+    const max=pool().length;if(!max)return;
+    if(src==='n'&&(v===''||isNaN(+v)))return;                 /* 숫자칸을 지우는 중에는 그대로 둠 */
+    const n=Math.min(max,Math.max(1,Math.round(+v)||1));S.cfg.n=n;
+    const r=$('#cn-r'),i=$('#cn-n');
+    if(r)r.value=n;
+    if(i&&src!=='n')i.value=n;                                /* 타이핑 중에는 숫자칸을 건드리지 않고, 입력을 마치면 범위 안의 값으로 정리 */
+  },
   cfg(k,v){S.cfg[k]=k==='n'?+v:v;render()},
-  start(){const ids=shuf(pool()).slice(0,S.cfg.n);S.quiz={qs:ids.map(i=>({...buildQ(i,S.cfg.type),i})),i:0,score:0,done:false};render()},
+  start(){const ids=shuf(pool()).slice(0,Math.max(1,Math.min(S.cfg.n,pool().length)));S.quiz={qs:ids.map(i=>({...buildQ(i,S.cfg.type),i})),i:0,score:0,done:false};render()},
   reset(){S.quiz=null;render()},
   pick(k){const Q=S.quiz.qs[S.quiz.i];if(Q.u!==undefined)return;Q.sel=k;Q.u=Q.o[k];Q.us=Q.t==='mc'?I[Q.u][0]:Q.u;Q.ok=Q.u===Q.a;if(Q.ok)S.quiz.score++;render()},
   sub(){const Q=S.quiz.qs[S.quiz.i];if(Q.u!==undefined)return;const v=$('#ans').value.trim();if(!v)return;Q.u=v;Q.us=v;Q.ok=norm(v)===norm(Q.h)||norm(v)===norm(Q.r);if(Q.ok)S.quiz.score++;render()},
