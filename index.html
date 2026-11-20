@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>사자성어 학습</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.0/dist/hanzi-writer.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 body{font-family:'Noto Sans KR',sans-serif;background:#EEF1EE;color:#1B2A38}
@@ -21,7 +22,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #1F6F
 </head>
 <body>
 <div class="max-w-xl mx-auto px-4 pt-5 pb-28">
-  <div class="flex items-center gap-3 mb-4"><span id="back"></span><h1 class="han text-2xl font-bold">사자성어 학습</h1><button class="b text-sm ml-auto" aria-label="한자사전 열기" onclick="A.dict('')">📖 한자사전</button></div>
+  <div class="flex items-center gap-3 mb-4"><span id="back"></span><h1 class="han text-2xl font-bold">사자성어 학습</h1><button class="b text-sm ml-auto" aria-label="한자사전 열기" onclick="A.dict('')">📖 한자사전</button><button id="authbtn" class="b text-sm" aria-label="로그인" onclick="A.auth()">로그인</button></div>
   <div id="app"></div>
   <p class="text-center mt-8"><button class="text-xs text-slate-400 underline" onclick="A.adminLogin()">관리자</button></p>
 </div>
@@ -29,6 +30,8 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #1F6F
 <div id="modal"></div>
 <div id="memo"></div>
 <div id="dict"></div>
+<div id="wr"></div>
+<div id="auth"></div>
 
 <script>
 /* ===== 데이터 =====
@@ -39,16 +42,7 @@ const BASE=[
 ['累卵之勢','누란지세','알을 쌓아 놓은 것처럼 매우 위태로운 형세.','『사기』에 전하는 범저(范雎) 이야기에서, 진나라의 형세가 알을 쌓아 놓은 것보다 위태롭다고 한 말에서 비롯되었다고 합니다.'],
 ['塞翁之馬','새옹지마','인생의 길흉화복은 예측하기 어려워 늘 변화가 많음.','『회남자』에 나옵니다. 변방 노인의 말이 달아났다가 준마를 데려왔고, 아들이 그 말에서 떨어져 다리를 다쳤지만 덕분에 전쟁에 끌려가지 않았다는 이야기입니다.'],
 ['轉禍爲福','전화위복','재앙이 바뀌어 오히려 복이 됨.','『사기』 등에서 "화를 원인으로 삼아 복을 만든다"는 표현에서 비롯되었습니다. 나쁜 일을 잘 활용해 좋은 결과로 바꾼다는 뜻입니다.'],
-['臥薪嘗膽','와신상담','섶에 눕고 쓸개를 맛본다는 뜻으로, 원수를 갚으려고 온갖 고난을 참고 견딤.','중국 춘추시대 오나라 부차는 섶에 누워 월나라 구천에게 복수를 다짐했고, 패한 구천은 쓸개를 맛보며 치욕을 잊지 않아 결국 부차를 무찔렀습니다.'],
 ['結草報恩','결초보은','죽어서도 은혜를 잊지 않고 갚음.','『춘추좌씨전』에 나옵니다. 위과가 아버지의 첩을 순장하지 않고 시집보내 주었는데, 훗날 전쟁터에서 그 아버지의 혼이 풀을 묶어 적장을 넘어뜨려 위과를 도왔다는 이야기입니다.'],
-['刻舟求劍','각주구검','판단력이 둔하여 시세의 변화를 모르고 어리석게 고집함.','『여씨춘추』에 나옵니다. 초나라 사람이 배에서 칼을 강에 빠뜨리자 뱃전에 표시를 새기고, 배가 멈춘 뒤 그 자리에서 칼을 찾으려 했다는 이야기입니다.'],
-['漁父之利','어부지리','둘이 다투는 사이에 제3자가 이익을 봄.','『전국책』에 나옵니다. 도요새와 조개가 서로 물고 다투는 사이 지나가던 어부가 둘 다 잡았다는 이야기로, 소대가 조나라 왕을 설득할 때 든 비유입니다.'],
-['守株待兔','수주대토','한 가지 일에만 얽매여 발전이 없음. 요행을 바람.','『한비자』에 나옵니다. 송나라 농부가 토끼가 그루터기에 부딪혀 죽은 것을 보고, 농사를 그만두고 그루터기만 지키며 토끼를 기다렸다는 이야기입니다.'],
-['他山之石','타산지석','다른 산의 나쁜 돌도 내 옥을 가는 데 쓸 수 있듯, 남의 하찮은 말과 행동도 나의 수양에 도움이 됨.','『시경』 소아 학명 편에서 비롯되었습니다. 다른 사람의 잘못을 보고 자신을 돌아본다는 뜻으로 쓰입니다.'],
-['雪上加霜','설상가상','눈 위에 서리가 덮인다는 뜻으로, 불행이 거듭 겹침.','불교 서적 『경덕전등록』 등에 쓰인 표현입니다. 어려운 일이 겹칠 때 씁니다.'],
-['大器晩成','대기만성','큰 그릇은 늦게 이루어진다는 뜻으로, 크게 될 사람은 늦게 이루어짐.','『노자』 41장의 "큰 그릇은 늦게 이루어진다"에서 비롯되었습니다. 오랜 노력 끝에 뒤늦게 성공하는 사람을 말합니다.'],
-['螢雪之功','형설지공','반딧불과 눈빛으로 글을 읽으며 이룬 공이라는 뜻으로, 고생하며 부지런히 공부한 보람.','『진서』에 나옵니다. 가난했던 차윤은 반딧불로, 손강은 눈빛으로 책을 읽으며 공부해 훗날 높은 벼슬에 올랐다고 합니다.'],
-['管鮑之交','관포지교','관중과 포숙아의 사귐이라는 뜻으로, 서로 이해하고 믿는 매우 친밀한 우정.','『사기』에 나옵니다. 포숙아는 가난하고 실수가 많던 친구 관중을 끝까지 믿고 도와, 관중이 제나라 재상이 되게 했습니다.'],
 ['甘吞苦吐','감탄고토','달면 삼키고 쓰면 뱉는다는 뜻으로, 자기 비위에 맞으면 받아들이고 맞지 않으면 버림.','특정 고사나 출전은 확인되지 않았습니다. “달면 삼키고(甘吞) 쓰면 뱉는다(苦吐)”는 말뜻 그대로 굳어진 표현입니다.'],
 ['孤立無援','고립무원','고립되어 구원을 받을 데가 없음.','특정 고사나 출전은 확인되지 않았습니다. “외로이 서 있고(孤立) 도움이 없다(無援)”는 말뜻 그대로 쓰입니다.'],
 ['群鷄一鶴','군계일학','닭의 무리 가운데 한 마리의 학이라는 뜻으로, 많은 사람 가운데서 뛰어난 한 사람.','『진서』 혜소전에 전하는 이야기에서 비롯되었다고 합니다. 진나라 혜소(嵇紹)의 늠름한 모습을 보고 “닭의 무리 속에 있는 학 같다”고 한 말입니다.'],
@@ -139,15 +133,19 @@ const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){retu
 const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const norm=s=>String(s).replace(/\s/g,'');
+/* ★ Firebase 설정값: 콘솔 > 프로젝트 설정 > 내 앱(웹)의 값을 아래에 붙여 넣으세요. 비어 있으면 로그인은 꺼져 있고, 관리자는 예전 방식(임시 비밀번호)으로 동작합니다. (이 값은 공개되어도 되는 식별 정보입니다) */
+const FIREBASE_CONFIG={apiKey:'',authDomain:'',projectId:'',appId:''};
+const FB_ON=!!(FIREBASE_CONFIG.apiKey&&FIREBASE_CONFIG.projectId&&FIREBASE_CONFIG.appId);
 const ADMIN_PW='change-me'; /* ★ 관리자 비밀번호: 배포 전에 반드시 바꾸세요 (코드에 보이므로 보안용이 아님) */
 const ss=k=>{try{return sessionStorage.getItem(k)}catch(e){return null}};
 const ssSet=(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}};
-let SHARED=[];
+let SHARED=[],CLOUD=[],CLOUD_KEYS=new Set();
+const BASE_KEYS=new Set(BASE.map(x=>x[0]));
 const OLD=['甘言利說','苦盡甘來','累卵之勢','塞翁之馬','轉禍爲福','臥薪嘗膽','結草報恩','刻舟求劍','漁父之利','守株待兔','他山之石','雪上加霜','大器晩成','螢雪之功','管鮑之交'].map(k=>[k]); /* 예전 저장 형식(번호) 이전용: 최초 15개의 원래 순서(고정) */
 const okEntry=x=>Array.isArray(x)&&x.length>=3&&/^[\u3400-\u4DBF\u4E00-\u9FFF]{2,8}$/.test(String(x[0]))&&[x[1],x[2]].every(t=>typeof t==='string'&&t.trim());
 /* 목록 = 기본(b) + 관리자 공용(s), 한자 중복은 앞선 것만 사용 */
 function buildI(){const seen=new Set(),out=[];
-  [[BASE,'b'],[SHARED,'s']].forEach(([arr,o])=>arr.forEach(x=>{if(!seen.has(x[0])){seen.add(x[0]);{const n=INNER[x[0]];out.push([x[0],x[1],n?n[0]:x[2],n?n[1]:(x[3]||'등록된 유래·해설이 없습니다.'),o])}}}));
+  [[BASE,'b'],[SHARED,'s'],[CLOUD,'s']].forEach(([arr,o])=>arr.forEach(x=>{if(!seen.has(x[0])){seen.add(x[0]);{const n=INNER[x[0]];out.push([x[0],x[1],n?n[0]:x[2],n?n[1]:(x[3]||'등록된 유래·해설이 없습니다.'),o])}}}));
   return out}
 let I=buildI();
 function rebuild(){
@@ -156,7 +154,7 @@ function rebuild(){
   const m=a=>new Set(a.map(k=>I.findIndex(x=>x[0]===k)).filter(i=>i>=0));
   S.bm=m(kb);S.sel=m(ks);
 }
-const S={form:{},err:'',msg:'',tab:'dict',sel:new Set(),bm:new Set(),admin:ss('adm')==='1',open:null,ch:null,q:'',study:null,quiz:null,cfg:{type:'mix',scope:'all',n:10}};
+const S={form:{},err:'',msg:'',tab:'dict',sel:new Set(),bm:new Set(),admin:!FB_ON&&ss('adm')==='1',open:null,ch:null,q:'',study:null,quiz:null,cfg:{type:'mix',mean:'out',scope:'all',n:10}};
 const save=()=>{sv('sel',[...S.sel].map(i=>I[i][0]));sv('bm',[...S.bm].map(i=>I[i][0]))};
 let MEMOS=ld('memos',{});   /* 개인 메모: {사자성어: {t:텍스트, s:[획...], u:시각}} — 이 브라우저에만 저장 */
 const MS={key:null,mode:'pen',tool:'pen',color:'#1B2A38',pen:0.5,ers:1.0,strokes:[],hist:[],snap:null,cur:null,ring:null,cv:null,ctx:null};
@@ -205,8 +203,108 @@ function vBm(){
   <div class="space-y-2">${list(ids,'bm')}</div>`;
 }
 
+/* ===== 로그인 / 실시간 관리자 (Firebase, CDN 불러오기) ===== */
+const FB={ready:false,user:null,profile:null,admin:false,api:null,sig:''};
+const AU={open:false,view:'form',tab:'login',err:'',busy:false,f:{email:'',nick:'',pw:'',pw2:''}};
+const FB_V='https://www.gstatic.com/firebasejs/13.3.0/';
+const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const AUTH_ERR={'auth/email-already-in-use':'이미 가입된 이메일이에요. 로그인해 주세요.','auth/invalid-email':'이메일 형식이 올바르지 않아요.','auth/weak-password':'비밀번호가 너무 약해요. 8자 이상으로 해 주세요.','auth/invalid-credential':'이메일 또는 비밀번호가 올바르지 않아요.','auth/user-not-found':'이메일 또는 비밀번호가 올바르지 않아요.','auth/wrong-password':'이메일 또는 비밀번호가 올바르지 않아요.','auth/too-many-requests':'시도가 너무 많아요. 잠시 후 다시 해 주세요.','auth/popup-closed-by-user':'로그인 창이 닫혀서 취소됐어요.','auth/popup-blocked':'팝업이 막혔어요. 허용하거나 다른 브라우저로 시도해 주세요.','auth/network-request-failed':'네트워크 연결을 확인해 주세요.','permission-denied':'권한이 없어요. (관리자 계정인지, Firestore 규칙이 설정됐는지 확인해 주세요)'};
+const authErrText=e=>AUTH_ERR[e&&e.code]||'문제가 발생했어요. 잠시 후 다시 시도해 주세요.';
+const nickOf=()=>FB.user?((FB.profile&&FB.profile.nickname)||FB.user.displayName||(FB.user.email||'').split('@')[0]||'학습자'):'';
+
+async function fbInit(){
+  if(!FB_ON||FB.ready)return;
+  try{
+    const [A0,AU0,FS]=await Promise.all([import(FB_V+'firebase-app.js'),import(FB_V+'firebase-auth.js'),import(FB_V+'firebase-firestore.js')]);
+    const app=A0.initializeApp(FIREBASE_CONFIG),auth=AU0.getAuth(app),db=FS.getFirestore(app);
+    FB.api={AU0,FS,auth,db};FB.ready=true;
+    AU0.onAuthStateChanged(auth,async u=>{
+      FB.user=u;FB.profile=null;FB.admin=false;
+      if(u){
+        try{const d=await FS.getDoc(FS.doc(db,'users',u.uid));if(d.exists())FB.profile=d.data()}catch(e){}
+        try{const d=await FS.getDoc(FS.doc(db,'admins',u.uid));FB.admin=d.exists()}catch(e){}
+      }
+      S.admin=FB.admin;if(!FB.admin&&S.tab==='admin')S.tab='dict';
+      render();authRender();
+    });
+    FS.onSnapshot(FS.collection(db,'words'),snap=>{   /* 관리자가 저장하면 모든 방문자에게 즉시 도착 */
+      const list=[];
+      snap.forEach(d=>{const x=d.data();if(okEntry([x.hanja,x.reading,x.outer])&&!BASE_KEYS.has(x.hanja))list.push({h:x.hanja,r:x.reading,o:x.outer,i:x.inner||''})});
+      list.sort((a,b)=>a.r.localeCompare(b.r,'ko'));
+      const sig=JSON.stringify(list);if(sig===FB.sig)return;FB.sig=sig;
+      CLOUD_KEYS.forEach(k=>delete INNER[k]);CLOUD_KEYS=new Set(list.map(w=>w.h));
+      list.forEach(w=>{INNER[w.h]=[w.o,w.i]});
+      CLOUD=list.map(w=>[w.h,w.r,w.o,w.i]);rebuild();render();
+    },()=>{});
+  }catch(e){FB.ready=false;authRender()}
+}
+async function fbEnsureProfile(u,nick,provider){
+  const {doc,getDoc,setDoc,serverTimestamp}=FB.api.FS,ref=doc(FB.api.db,'users',u.uid),d=await getDoc(ref);
+  if(d.exists())return d.data();                       /* 이미 있으면 건드리지 않음(점수 초기화 방지) */
+  await setDoc(ref,{nickname:nick,email:u.email||null,provider,createdAt:serverTimestamp(),quizScore:0});
+  return (await getDoc(ref)).data();
+}
+async function fbSignup(email,pw,nick){
+  const {createUserWithEmailAndPassword,updateProfile}=FB.api.AU0,cred=await createUserWithEmailAndPassword(FB.api.auth,email,pw);
+  await updateProfile(cred.user,{displayName:nick});FB.profile=await fbEnsureProfile(cred.user,nick,'password');
+}
+async function fbLogin(email,pw){
+  const cred=await FB.api.AU0.signInWithEmailAndPassword(FB.api.auth,email,pw);
+  FB.profile=await fbEnsureProfile(cred.user,cred.user.displayName||email.split('@')[0],'password');
+}
+async function fbGoogle(){
+  const {AU0,auth}=FB.api,prov=new AU0.GoogleAuthProvider();prov.setCustomParameters({prompt:'select_account'});
+  const cred=await AU0.signInWithPopup(auth,prov);
+  FB.profile=await fbEnsureProfile(cred.user,cred.user.displayName||(cred.user.email||'').split('@')[0]||'학습자','google');
+}
+const fbSaveWord=async w=>{const {doc,setDoc,serverTimestamp}=FB.api.FS;await setDoc(doc(FB.api.db,'words',w.hanja),{...w,createdAt:serverTimestamp(),by:FB.user.uid})};
+const fbDeleteWord=async h=>{const {doc,deleteDoc}=FB.api.FS;await deleteDoc(doc(FB.api.db,'words',h))};
+
+function authValidate(su,f){
+  if(!EMAIL_RE.test(f.email.trim()))return '올바른 이메일 주소를 입력해 주세요.';
+  if(su){const n=f.nick.trim();if(n.length<2||n.length>12)return '닉네임은 2~12자로 입력해 주세요.'}
+  if(f.pw.length<8)return '비밀번호는 8자 이상이어야 해요.';
+  if(su&&f.pw2!==f.pw)return '비밀번호가 일치하지 않아요.';
+  return '';
+}
+function authHtml(){
+  const su=AU.tab==='signup';let body,title='로그인';
+  if(!FB_ON)body='<p class="text-sm leading-relaxed">로그인 기능이 아직 연결되지 않았어요. 관리자가 Firebase 설정값을 넣으면 사용할 수 있어요.</p>';
+  else if(!FB.ready)body='<p class="text-sm leading-relaxed">로그인 서버에 연결하는 중이거나 연결하지 못했어요. 인터넷 연결을 확인하고 잠시 뒤 다시 열어 주세요.</p>';
+  else if(FB.user&&AU.view==='account'){
+    title='내 계정';const dt=FB.profile&&FB.profile.createdAt&&FB.profile.createdAt.toDate?FB.profile.createdAt.toDate().toLocaleDateString('ko-KR'):'';
+    body=`<div class="space-y-1 text-sm mb-4"><p><b>${esc(nickOf())}</b>${FB.admin?' <span class="text-xs px-2 py-0.5 rounded bg-[#DDF0E6] text-[#1F6F5C]">관리자</span>':''}</p><p class="text-slate-600">${esc(FB.user.email||'')}</p>${dt?`<p class="text-slate-600">가입일 ${dt}</p>`:''}<p class="text-slate-600">퀴즈 점수 ${(FB.profile&&FB.profile.quizScore)||0}점</p></div>${FB.admin?'<button class="b bp w-full mb-2" onclick="A.authToAdmin()">관리자 화면</button>':''}<button class="b w-full" onclick="A.authLogout()">로그아웃</button>`;
+  }else{
+    title=su?'회원가입':'로그인';
+    const tab=(k,l)=>`<button type="button" role="tab" id="au-tab-${k}" aria-selected="${AU.tab===k}" tabindex="${AU.tab===k?0:-1}" class="flex-1 py-3 text-sm font-medium border-b-2 -mb-px ${AU.tab===k?'border-[#1F6F5C] text-[#1F6F5C]':'border-transparent text-slate-500'}" onclick="A.authTab('${k}')">${l}</button>`;
+    const inp=(k,l,type,ac)=>`<label class="block mb-3"><span class="text-sm font-medium">${l}</span><input type="${type}" autocomplete="${ac}" value="${esc(AU.f[k])}" oninput="A.authField('${k}',this.value)" class="w-full mt-1 px-4 py-3 rounded-lg border border-[#C9D2CB] bg-white"></label>`;
+    body=`<div role="tablist" aria-label="로그인 또는 회원가입" class="flex mb-4 border-b border-[#C9D2CB]">${tab('login','로그인')}${tab('signup','회원가입')}</div>
+    <form onsubmit="event.preventDefault();A.authSubmit()" novalidate>${inp('email','이메일','email','email')}${su?inp('nick','닉네임 (2~12자)','text','nickname'):''}${inp('pw','비밀번호 (8자 이상)','password',su?'new-password':'current-password')}${su?inp('pw2','비밀번호 확인','password','new-password'):''}
+    ${AU.err?`<p role="alert" class="text-sm text-[#B3261E] mb-3">${esc(AU.err)}</p>`:''}<button type="submit" class="b bp w-full py-3" ${AU.busy?'disabled style="opacity:.5"':''}>${AU.busy?'처리 중…':su?'가입하기':'로그인'}</button></form>
+    <div class="flex items-center gap-3 my-3 text-sm text-slate-500"><span class="flex-1 h-px bg-slate-300"></span>또는<span class="flex-1 h-px bg-slate-300"></span></div>
+    <button type="button" class="b w-full py-3" onclick="A.authGoogle()" ${AU.busy?'disabled':''}>Google로 ${su?'시작하기':'로그인'}</button>`;
+  }
+  return `<div class="fixed inset-0 bg-black/50 z-[60] flex items-end sm:items-center justify-center" onpointerdown="if(event.target===this)A.authClose()"><div class="bg-white w-full max-w-sm max-h-[94vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl p-4" role="dialog" aria-modal="true" aria-label="${title}"><div class="flex items-center mb-3"><h2 class="font-bold">${title}</h2><button aria-label="로그인 창 닫기" class="ml-auto text-2xl px-2" onclick="A.authClose()">✕</button></div>${body}</div></div>`;
+}
+function authRender(){if(AU.open)$('#auth').innerHTML=authHtml()}
+
+function vAdminCloud(){
+  if(!FB.admin)return '<p class="text-center text-slate-500 py-12">관리자 로그인이 필요해요. 화면 맨 아래 “관리자”를 눌러 관리자 계정으로 로그인하세요.</p>';
+  const f=S.form,v=k=>esc(f[k]||'');
+  const inp=(k,l,ph,cls='')=>`<label class="block mb-3"><span class="text-sm font-medium">${l}</span><input value="${v(k)}" oninput="A.form('${k}',this.value)" placeholder="${ph}" class="w-full mt-1 px-4 py-3 rounded-lg border border-[#C9D2CB] bg-white ${cls}"></label>`;
+  const rows=CLOUD.map(w=>`<div class="card p-3 flex items-center gap-2"><div class="flex-1 min-w-0"><span class="han text-xl font-bold">${esc(w[0])}</span> <span class="text-sm text-slate-600 ml-1">${esc(w[1])}</span><span class="block text-xs text-slate-500 mt-1">${esc(w[2])}</span></div><button class="b text-sm" onclick="A.cloudEdit('${w[0]}')">수정</button><button class="b text-sm text-[#B3261E] border-[#B3261E]" onclick="A.cloudDel('${w[0]}')">삭제</button></div>`).join('');
+  return `<div class="card p-4 mb-4 bg-[#F6F8F6] text-sm leading-relaxed"><b>관리자 모드 (실시간)</b><br>여기서 저장한 단어는 파일을 올리지 않아도 지금 접속 중인 모든 사람에게 바로 보여요.</div>
+  <div class="card p-4 mb-5"><h2 class="font-bold mb-3">공용 사자성어 추가·수정</h2>${inp('ah','사자성어 (한자)','예: 亡羊補牢','han text-lg')}${inp('ar','독음 (한글 발음)','예: 망양보뢰')}${inp('am','겉뜻','겉으로 드러난 뜻')}
+  <label class="block mb-3"><span class="text-sm font-medium">속뜻 (선택)</span><textarea rows="3" oninput="A.form('au',this.value)" class="w-full mt-1 px-4 py-3 rounded-lg border border-[#C9D2CB] bg-white">${v('au')}</textarea></label>
+  ${S.err?`<p class="text-sm text-[#B3261E] mb-2" role="alert">${esc(S.err)}</p>`:''}${S.msg?`<p class="text-sm text-[#1F6F5C] mb-2">${esc(S.msg)}</p>`:''}
+  <button class="b bp w-full" onclick="A.cloudAdd()">저장</button><p class="text-xs text-slate-500 mt-2">이미 저장한 한자를 다시 저장하면 내용이 수정돼요.</p></div>
+  <h2 class="font-bold mb-2">실시간 공용 단어 (${CLOUD.length})</h2><div class="space-y-2 mb-6">${rows||'<p class="text-slate-500 text-sm py-4 text-center">아직 없어요.</p>'}</div>
+  <button class="b w-full" onclick="A.authLogout()">로그아웃</button>`;
+}
+function vAdmin(){return FB_ON?vAdminCloud():vAdminLocal()}
+
 /* ===== 관리자 ===== */
-function vAdmin(){
+function vAdminLocal(){
   if(!S.admin)return '<p class="text-center text-slate-500 py-12">관리자 로그인이 필요합니다. 화면 맨 아래 "관리자"를 눌러 로그인하세요.</p>';
   const f=S.form,v=k=>esc(f[k]||'');
   const inp=(k,l,ph,cls='')=>`<label class="block mb-3"><span class="text-sm font-medium">${l}</span><input value="${v(k)}" oninput="A.form('${k}',this.value)" placeholder="${ph}" class="w-full mt-1 px-4 py-3 rounded-lg border border-[#C9D2CB] bg-white ${cls}"></label>`;
@@ -368,7 +466,7 @@ function memoCanvas(){
   cv.addEventListener('contextmenu',e=>e.preventDefault());
   memoDraw();
 }
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(DS.open)A.dictClose();else if(MS.key!==null)A.memoClose()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(AU.open)A.authClose();else if(WR.open)A.wrClose();else if(DS.open)A.dictClose();else if(MS.key!==null)A.memoClose()});
 
 /* ===== 한자사전 모달 (앱 안에서 겹쳐 뜸) ===== */
 const DS={open:false,q:''};
@@ -378,7 +476,7 @@ function dictResults(){
   let cs=[];
   if(nq){const hs=[...new Set([...nq].filter(isHanja))];cs=(hs.length?hs:Object.keys(CH).filter(c=>CH[c].split('|').slice(0,2).join(' ').includes(q))).slice(0,30)}
   const chHtml=cs.map(c=>{const r=CH[c],[eum,mean,bu,st]=r?r.split('|'):[];
-    return `<div class="card p-3 flex items-center gap-3"><span class="han text-3xl">${c}</span><div class="flex-1 text-sm">${r?`${esc(mean)} · 음 ${esc(eum)}<br><span class="text-slate-500">부수 <span class="han">${bu}</span> · ${st}획</span>`:'<span class="text-slate-500">내장 사전에 없는 글자입니다.</span>'}</div><a href="${NAVER+encodeURIComponent(c)}" target="_blank" rel="noopener noreferrer" class="text-xs underline text-[#1F6F5C]">네이버에서 더 보기</a></div>`}).join('');
+    return `<div class="card p-3 flex items-center gap-3"><span class="han text-3xl">${c}</span><div class="flex-1 text-sm">${r?`${esc(mean)} · 음 ${esc(eum)}<br><span class="text-slate-500">부수 <span class="han">${bu}</span> · ${st}획</span>`:'<span class="text-slate-500">내장 사전에 없는 글자입니다.</span>'}</div><div class="flex flex-col items-end gap-1"><button class="text-xs px-2 py-1 rounded border border-[#1F6F5C] text-[#1F6F5C]" onclick="A.write('${c}')">✏️ 쓰기 연습</button><a href="${NAVER+encodeURIComponent(c)}" target="_blank" rel="noopener noreferrer" class="text-xs underline text-[#1F6F5C]">네이버에서 더 보기</a></div></div>`}).join('');
   const idHtml=ids.map(i=>`<button class="card p-3 w-full text-left" onclick="A.dictPick(${i})"><span class="han text-lg font-bold">${I[i][0]}</span> <span class="text-sm text-slate-600 ml-1">${esc(I[i][1])}</span><span class="block text-xs text-slate-500 mt-1">${esc(I[i][2])}</span></button>`).join('');
   return (cs.length?`<h3 class="font-bold text-sm mt-2 mb-2">한자 (${cs.length})</h3><div class="space-y-2">${chHtml}</div>`:'')
     +`<h3 class="font-bold text-sm mt-4 mb-2">사자성어 (${ids.length})</h3><div class="space-y-2">${idHtml||'<p class="text-slate-500 text-sm py-4 text-center">검색 결과가 없습니다.</p>'}</div>`
@@ -393,11 +491,38 @@ function dictHtml(){
   </div></div>`;
 }
 
+/* ===== 한자 쓰기 연습 (Hanzi Writer: 획순 애니메이션 + 따라 쓰기 퀴즈) ===== */
+const WR={open:false,w:null,n:0};
+const VARIANT={'爲':'為','晩':'晚','鷄':'雞','裏':'裡'};   /* 데이터에 없을 때 대신 보여 줄 이체자 */
+const wrMsg=t=>{const e=document.querySelector('#wr-msg');if(e)e.textContent=t};
+function wrHtml(ch){
+  const r=CH[ch],[eum,mean]=r?r.split('|'):[];
+  return `<div class="fixed inset-0 bg-black/50 z-[45] flex items-end sm:items-center justify-center" onpointerdown="if(event.target===this)A.wrClose()">
+  <div class="bg-white w-full max-w-md max-h-[94vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl p-4" role="dialog" aria-modal="true" aria-label="한자 쓰기 연습">
+    <div class="flex items-center gap-2 mb-2"><h2 class="font-bold"><span class="han text-2xl">${ch}</span> 쓰기 연습</h2><button aria-label="쓰기 연습 닫기" class="ml-auto text-2xl px-2" onclick="A.wrClose()">✕</button></div>
+    <p class="text-sm text-slate-600 mb-2">${r?`${esc(mean)} · 음 ${esc(eum)}`:'내장 사전에 없는 글자입니다.'}</p>
+    <div class="flex justify-center mb-2"><div id="wr-box" class="border border-[#C9D2CB] rounded-lg bg-white" style="touch-action:none"></div></div>
+    <p id="wr-msg" role="status" class="text-sm text-center min-h-[2.5rem] mb-2">불러오는 중…</p>
+    <div class="grid grid-cols-2 gap-2"><button class="b text-sm" onclick="A.wrAnim()">▶ 획순 보기</button><button class="b text-sm" onclick="A.wrQuiz(false)">✍️ 따라 쓰기</button><button class="b text-sm" onclick="A.wrQuiz(true)">🧠 외워서 쓰기</button><button class="b text-sm" onclick="A.wrReset()">🔄 다시</button></div>
+    <p class="text-xs text-slate-500 mt-3">획순 데이터는 중국·대만 글꼴 기반이라 교재와 일부 다를 수 있어요. 다르면 교재를 따르세요.</p>
+  </div></div>`;
+}
+function wrInit(ch,isAlt){
+  const box=document.querySelector('#wr-box');if(!box)return;box.innerHTML='';WR.w=null;
+  if(typeof HanziWriter==='undefined'){wrMsg('획순 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.');return}
+  const size=Math.max(200,Math.min(300,window.innerWidth-80));
+  try{
+    WR.w=HanziWriter.create('wr-box',ch,{width:size,height:size,padding:10,showOutline:true,strokeAnimationSpeed:1,delayBetweenStrokes:300,showHintAfterMisses:2,
+      onLoadCharDataSuccess:d=>{WR.n=(d&&d.strokes?d.strokes.length:0);wrMsg((isAlt?'※ 이체자 “'+ch+'”로 대신 보여 드려요. ':'')+(WR.n?WR.n+'획 · ':'')+'“획순 보기”나 “따라 쓰기”를 눌러 보세요.')},
+      onLoadCharDataError:()=>{if(!isAlt&&VARIANT[ch])wrInit(VARIANT[ch],true);else wrMsg('이 글자의 획순 데이터를 불러오지 못했어요. 데이터에 없는 글자이거나 인터넷 연결 문제일 수 있어요.')}});
+  }catch(e){wrMsg('쓰기 연습을 시작하지 못했어요.')}
+}
+
 /* ===== 한자 상세 모달 ===== */
 function vModal(){
   const [h,r,m,u]=I[S.open];
-  const chars=[...h].map(c=>`<div class="flex flex-col items-center">${hLink(c,'han text-5xl px-1 rounded hover:bg-slate-100')}<button onclick="A.ch('${c}')" class="text-xs mt-1 px-2 py-0.5 rounded border ${S.ch&&S.ch.ch===c?'bg-[#1F6F5C] text-white border-[#1F6F5C]':'border-[#C9D2CB] text-slate-600'}">음·뜻</button></div>`).join('');
-  let d='<p class="text-sm text-slate-500">글자를 누르면 한자사전이 열리고, ‘음·뜻’ 버튼을 누르면 이 앱의 음·부수·획수·뜻을 볼 수 있어요.</p>';
+  const chars=[...h].map(c=>`<div class="flex flex-col items-center">${hLink(c,'han text-5xl px-1 rounded hover:bg-slate-100')}<button onclick="A.ch('${c}')" class="text-xs mt-1 px-2 py-0.5 rounded border ${S.ch&&S.ch.ch===c?'bg-[#1F6F5C] text-white border-[#1F6F5C]':'border-[#C9D2CB] text-slate-600'}">음·뜻</button><button onclick="A.write('${c}')" aria-label="${c} 쓰기 연습" class="text-xs mt-1 px-2 py-0.5 rounded border border-[#1F6F5C] text-[#1F6F5C]">✏️ 쓰기</button></div>`).join('');
+  let d='<p class="text-sm text-slate-500">글자를 누르면 한자사전이 열리고, ‘음·뜻’ 버튼을 누르면 이 앱의 음·부수·획수·뜻을, ‘✏️ 쓰기’ 버튼을 누르면 획순 연습을 할 수 있어요.</p>';
   if(S.ch) d=S.ch.eum?`<dl class="grid grid-cols-[3.5rem_1fr] gap-y-1 text-sm"><dt class="text-slate-500">한자</dt><dd class="han text-xl">${S.ch.ch}</dd><dt class="text-slate-500">음</dt><dd>${S.ch.eum}</dd><dt class="text-slate-500">뜻</dt><dd>${S.ch.mean}</dd><dt class="text-slate-500">부수</dt><dd class="han">${S.ch.bu}</dd><dt class="text-slate-500">획수</dt><dd>${S.ch.st}획</dd></dl>`:'<p class="text-sm">내장 한자 사전에 없는 글자입니다. lookupHanja()에 사전 API를 연결하면 이 정보가 표시됩니다.</p>';
   return `<div class="fixed inset-0 bg-black/40 z-20 flex items-end sm:items-center justify-center" onclick="A.close()">
   <div class="bg-white w-full max-w-xl max-h-[88vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl p-5" onclick="event.stopPropagation()">
@@ -428,7 +553,9 @@ function vQuiz(){
   const seg=(k,opts)=>`<div class="flex flex-wrap gap-2 mb-4">${opts.map(([v,l])=>`<button class="b ${c[k]===v?'on':''}" onclick="A.cfg('${k}','${v}')">${l}</button>`).join('')}</div>`;
   if(!q){
     const n=pool().length,cn=Math.max(1,Math.min(S.cfg.n,n||1));
+    const noIn=pool().filter(i=>!hasInner(i)).length;
     return `<h2 class="font-bold mb-2">퀴즈 유형</h2>${seg('type',[['mix','섞어서'],['mc','뜻→객관식'],['sub','뜻→주관식'],['blank','빈칸 채우기']])}
+    ${c.type==='blank'?'':`<h2 class="font-bold mb-2">문제로 보여줄 뜻 <span class="text-xs font-normal text-slate-500">(객관식·주관식)</span></h2>${seg('mean',[['out','겉뜻'],['in','속뜻'],['mix','겉뜻·속뜻 섞어서']])}${c.mean!=='out'&&noIn?`<p class="text-xs text-slate-500 -mt-2 mb-4">※ 속뜻이 없는 ${noIn}개는 겉뜻(뜻)으로 출제돼요.</p>`:''}`}
     <h2 class="font-bold mb-2">범위</h2>${seg('scope',[['all','전체'],['sel','선택 항목('+S.sel.size+')'],['bm','북마크('+S.bm.size+')']])}
     <h2 class="font-bold mb-2">문제 수</h2><div class="flex items-center gap-3 mb-1"><input id="cn-r" type="range" min="1" max="${n||1}" step="1" value="${cn}" ${n?'':'disabled'} aria-label="문제 수 조절 (드래그)" oninput="A.cnt(this.value,'r')" class="flex-1 accent-[#1F6F5C]"><label class="flex items-center gap-1 text-sm shrink-0"><input id="cn-n" type="number" min="1" max="${n||1}" step="1" value="${cn}" ${n?'':'disabled'} inputmode="numeric" aria-label="문제 수 직접 입력" oninput="A.cnt(this.value,'n')" onchange="A.cnt(this.value,'c')" class="w-20 px-3 py-2 rounded-lg border border-[#C9D2CB] bg-white text-center">문제</label></div>${n?`<p class="text-xs text-slate-500 mb-4">1 ~ ${n}문제 · 슬라이더를 끝까지 끌면 범위 전체</p>`:'<div class="mb-4"></div>'}
     <p class="text-sm text-slate-600 mb-3">출제 대상 ${n}개${n?'':' — 범위에 항목이 없습니다. 학습 선택 탭에서 고르거나 전체를 선택하세요.'}</p>
@@ -436,7 +563,7 @@ function vQuiz(){
   }
   if(q.done){
     return `<div class="card p-5 text-center mb-4"><div class="text-sm text-slate-500">점수</div><div class="text-4xl font-bold">${q.score} / ${q.qs.length}</div></div>
-    <div class="space-y-2 mb-4">${q.qs.map((Q,k)=>`<div class="card p-3 ${Q.ok?'ok':'no'}"><div class="text-sm">${k+1}. ${Q.ok?'정답':'오답'} · ${Q.t==='blank'?hLinks(Q.p):esc(Q.p)}</div><div class="text-sm mt-1">정답: <b class="han">${hLinks(Q.show)}</b>${Q.ok?'':` / 내 답: ${esc(Q.us)}`}</div></div>`).join('')}</div>
+    <div class="space-y-2 mb-4">${q.qs.map((Q,k)=>`<div class="card p-3 ${Q.ok?'ok':'no'}"><div class="text-sm">${k+1}. ${Q.ok?'정답':'오답'} · ${Q.k?'['+Q.k+'] ':''}${Q.t==='blank'?hLinks(Q.p):esc(Q.p)}</div><div class="text-sm mt-1">정답: <b class="han">${hLinks(Q.show)}</b>${Q.ok?'':` / 내 답: ${esc(Q.us)}`}</div></div>`).join('')}</div>
     <div class="grid grid-cols-1 gap-2"><button class="b" onclick="A.wrongBm()">틀린 문제 북마크에 담기</button><button class="b bp" onclick="A.start()">같은 설정으로 다시 풀기</button><button class="b" onclick="A.reset()">설정으로 돌아가기</button></div>`;
   }
   const Q=q.qs[q.i], done=Q.u!==undefined;
@@ -444,13 +571,19 @@ function vQuiz(){
   if(Q.t==='sub') body=`<input id="ans" ${done?'disabled':''} value="${done?esc(Q.us):''}" onkeydown="if(event.key==='Enter')A.sub()" placeholder="한자 또는 한글 독음 입력" class="w-full px-4 py-3 rounded-lg border border-[#C9D2CB] bg-white han text-lg mb-2">${done?'':'<button class="b bp w-full" onclick="A.sub()">제출</button>'}`;
   else body=`<div class="grid grid-cols-2 gap-2">${Q.o.map((o,k)=>{const lab=Q.t==='mc'?`<span class="han text-lg">${I[o][0]}</span><span class="block text-xs text-slate-500">${I[o][1]}</span>`:`<span class="han text-3xl">${o}</span>`;const cls=!done?'':(o===Q.a?'ok':(k===Q.sel?'no':''));return `<button class="b py-3 ${cls}" ${done?'disabled':''} onclick="A.pick(${k})">${lab}</button>`}).join('')}</div>`;
   return `<div class="flex justify-between mb-3 text-sm"><span>${q.i+1} / ${q.qs.length}</span><span>${{mc:'객관식',sub:'주관식',blank:'빈칸 채우기'}[Q.t]}</span></div>
-  <div class="card p-5 mb-3"><p class="${Q.t==='blank'?'han text-3xl text-center font-bold':''}">${Q.t==='blank'?hLinks(Q.p):esc(Q.p)}</p>${Q.t==='blank'?`<p class="text-sm text-slate-600 text-center mt-3">${esc(Q.hint)}</p>`:''}</div>${body}
+  <div class="card p-5 mb-3">${Q.k?`<span class="inline-block text-xs px-2 py-0.5 rounded bg-[#DDF0E6] text-[#1F6F5C] mb-2">${Q.k}</span>`:''}<p class="${Q.t==='blank'?'han text-3xl text-center font-bold':''}">${Q.t==='blank'?hLinks(Q.p):esc(Q.p)}</p>${Q.t==='blank'?`<p class="text-sm text-slate-600 text-center mt-3">${esc(Q.hint)}</p>`:''}</div>${body}
   ${done?`<div class="card p-3 mt-3 ${Q.ok?'ok':'no'}">${Q.ok?'정답입니다!':'오답입니다.'} 정답: <b class="han">${hLinks(Q.show)}</b></div><button class="b bp w-full mt-3" onclick="A.next()">${q.i+1<q.qs.length?'다음 문제':'결과 보기'}</button>`:''}`;
+}
+/* 객관식·주관식에서 문제로 보여 줄 뜻: 속뜻이 따로 있는 항목만 속뜻 사용 가능, 없으면 겉뜻(또는 뜻)으로 출제 */
+const hasInner=i=>!!INNER[I[i][0]]&&!!I[i][3];
+function qMeaning(i){
+  const [h,,m,u]=I[i],mode=S.cfg.mean,useIn=hasInner(i)&&(mode==='in'||(mode==='mix'&&Math.random()<0.5));
+  return useIn?{p:u,k:'속뜻'}:{p:m,k:INNER[h]?'겉뜻':''};
 }
 function buildQ(i,type){
   const [h,r,m]=I[i], t=type==='mix'?['mc','sub','blank'][Math.random()*3|0]:type;
-  if(t==='mc'){const o=shuf([i,...shuf(I.map((_,k)=>k).filter(k=>k!==i)).slice(0,3)]);return{t,p:m,a:i,o,show:`${h} (${r})`};}
-  if(t==='sub') return{t,p:m,h,r,show:`${h} (${r})`};
+  if(t==='mc'){const o=shuf([i,...shuf(I.map((_,k)=>k).filter(k=>k!==i)).slice(0,3)]);{const q=qMeaning(i);return{t,p:q.p,k:q.k,a:i,o,show:`${h} (${r})`};}}
+  if(t==='sub'){const q=qMeaning(i);return{t,p:q.p,k:q.k,h,r,show:`${h} (${r})`};}
   const pos=Math.random()*h.length|0, c=h[pos], p=[...h].map((x,k)=>k===pos?'( )':x).join('');
   const o=shuf([c,...shuf([...new Set([...Object.keys(CH),...(I.map(x=>x[0]).join('').match(/[\u3400-\u9FFF]/g)||[])])].filter(x=>x!==c)).slice(0,3)]);
   return{t,p,hint:`뜻: ${m}`,a:c,o,show:`${c} → ${h} (${r})`};
@@ -461,7 +594,7 @@ const A={
   tab(t){S.tab=t;S.study=null;S.err='';S.msg='';render()},
   q(v){S.q=v;$('#list').innerHTML=listHtml()},
   home(){ /* 처음 화면(단어장)으로: 퀴즈·학습·상세창·메모창 종료, 북마크/선택 항목은 유지 */
-    A.dictClose();A.memoClose(true);S.open=null;S.ch=null;S.study=null;S.quiz=null;S.tab='dict';S.err='';S.msg='';render();window.scrollTo(0,0);
+    A.authClose();A.wrClose();A.dictClose();A.memoClose(true);S.open=null;S.ch=null;S.study=null;S.quiz=null;S.tab='dict';S.err='';S.msg='';render();window.scrollTo(0,0);
   },
   memo(i){
     MS.key=I[i][0];const m=MEMOS[MS.key]||{};
@@ -485,6 +618,53 @@ const A={
   dictQ(v){DS.q=v;$('#dres').innerHTML=dictResults()},
   dictClose(){if(!DS.open)return;DS.open=false;$('#dict').innerHTML=''},
   dictPick(i){A.dictClose();A.open(i)},
+  write(ch){WR.open=true;WR.n=0;$('#wr').innerHTML=wrHtml(ch);wrInit(ch,false)},
+  wrClose(){if(!WR.open)return;try{WR.w&&WR.w.cancelQuiz&&WR.w.cancelQuiz()}catch(e){}WR.open=false;WR.w=null;$('#wr').innerHTML=''},
+  wrAnim(){if(!WR.w)return;try{WR.w.cancelQuiz()}catch(e){}WR.w.showOutline();WR.w.animateCharacter();wrMsg('획순을 보여 드려요. 순서를 눈으로 따라가 보세요.')},
+  wrQuiz(hide){
+    if(!WR.w)return;try{WR.w.cancelQuiz()}catch(e){}
+    if(hide)WR.w.hideOutline();else WR.w.showOutline();
+    wrMsg(hide?'윤곽 없이 외워서 써 보세요. 첫 획부터 차례대로 쓰면 돼요.':'윤곽을 따라 첫 획부터 써 보세요.');
+    WR.w.quiz({
+      onCorrectStroke:d=>wrMsg('✅ '+((d.strokeNum||0)+1)+(WR.n?'/'+WR.n:'')+'획 완료'),
+      onMistake:d=>wrMsg('❌ 아쉬워요, 다시 써 보세요. (틀린 횟수 '+(d.totalMistakes||0)+')'),
+      onComplete:r=>wrMsg('🎉 완성! 틀린 횟수 '+((r&&r.totalMistakes)||0)+'번')
+    });
+  },
+  wrReset(){if(!WR.w)return;try{WR.w.cancelQuiz()}catch(e){}WR.w.showCharacter();WR.w.showOutline();wrMsg('처음 상태로 돌아왔어요.')},
+  auth(tab){AU.open=true;AU.view=FB.user?'account':'form';AU.tab=tab||'login';AU.err='';$('#auth').innerHTML=authHtml()},
+  authClose(){if(!AU.open)return;AU.open=false;AU.err='';$('#auth').innerHTML=''},
+  authTab(t){AU.tab=t;AU.err='';authRender()},
+  authField(k,v){AU.f[k]=v},
+  async authSubmit(){
+    if(AU.busy||!FB.ready)return;const su=AU.tab==='signup',f=AU.f,e=authValidate(su,f);
+    if(e){AU.err=e;authRender();return}
+    AU.busy=true;AU.err='';authRender();
+    try{if(su)await fbSignup(f.email.trim(),f.pw,f.nick.trim());else await fbLogin(f.email.trim(),f.pw);AU.f={email:'',nick:'',pw:'',pw2:''};AU.busy=false;A.authClose();render();return}
+    catch(er){AU.err=authErrText(er)}
+    AU.busy=false;authRender();
+  },
+  async authGoogle(){
+    if(AU.busy||!FB.ready)return;AU.busy=true;AU.err='';authRender();
+    try{await fbGoogle();AU.busy=false;A.authClose();render();return}catch(er){AU.err=authErrText(er)}
+    AU.busy=false;authRender();
+  },
+  async authLogout(){try{await FB.api.AU0.signOut(FB.api.auth)}catch(e){}A.authClose();S.tab='dict';render()},
+  authToAdmin(){A.authClose();A.tab('admin')},
+  async cloudAdd(){
+    const f=S.form,h=(f.ah||'').replace(/\s/g,''),r=(f.ar||'').trim(),o=(f.am||'').trim(),i=(f.au||'').trim();
+    if(!/^[\u3400-\u4DBF\u4E00-\u9FFF]{2,8}$/.test(h))return A.err('사자성어는 한자 2~8자로 입력하세요.');
+    if(!r)return A.err('독음을 입력하세요.');
+    if(!o)return A.err('겉뜻을 입력하세요.');
+    if(!CLOUD_KEYS.has(h)&&I.some(x=>x[0]===h))return A.err('이미 단어장에 있는 사자성어입니다.');
+    try{await fbSaveWord({hanja:h,reading:r,outer:o,inner:i});S.form={};S.err='';S.msg='“'+h+'” 저장 완료! 지금 접속 중인 모든 사람에게 바로 보여요.';render()}
+    catch(e){A.err(authErrText(e))}
+  },
+  cloudEdit(h){const w=CLOUD.find(x=>x[0]===h);if(!w)return;S.form={ah:w[0],ar:w[1],am:w[2],au:w[3]};S.err='';S.msg='“'+h+'” 수정 중이에요. 고친 뒤 저장을 누르세요.';render();window.scrollTo(0,0)},
+  async cloudDel(h){
+    if(!confirm('“'+h+'”를 모두에게서 삭제할까요?'))return;
+    try{await fbDeleteWord(h);S.err='';S.msg='“'+h+'” 삭제했어요.';render()}catch(e){A.err(authErrText(e))}
+  },
   open(i){S.open=i;S.ch=null;render()},
   close(){S.open=null;S.ch=null;render()},
   async ch(c){S.ch=await lookupHanja(c)||{ch:c};render()},
@@ -514,6 +694,7 @@ const A={
   form(k,v){S.form[k]=v},
   err(m){S.err=m;S.msg='';render()},
   adminLogin(){
+    if(FB_ON){if(FB.admin){A.tab('admin');return}if(FB.user){alert('이 계정에는 관리자 권한이 없어요.');return}A.auth('login');return}
     if(S.admin){A.tab('admin');return}
     const pw=prompt('관리자 비밀번호');if(pw===null)return;
     if(pw!==ADMIN_PW){alert('비밀번호가 맞지 않습니다.');return}
@@ -554,6 +735,7 @@ function render(){
     .map(([k,l])=>`<button onclick="A.tab('${k}')" class="py-4 text-xs font-medium ${S.tab===k?'text-[#1F6F5C] border-t-2 border-[#1F6F5C] -mt-px':'text-slate-500'}">${l}</button>`).join('');
   $('#modal').innerHTML=S.open!==null?vModal():'';
   $('#back').innerHTML=(S.study||S.quiz)?BACK:'';
+  const ab=$('#authbtn');if(ab){ab.textContent=FB.user?'👤 '+nickOf():'로그인';ab.setAttribute('aria-label',FB.user?'내 계정':'로그인')}
 }
 /* 공용 단어(shared-words.json) 불러오기: HTML과 같은 위치에 파일이 있고 http(s)로 열었을 때 동작 */
 async function loadShared(){
@@ -568,7 +750,7 @@ $('#app').innerHTML='<p class="text-center text-slate-500 py-12">불러오는 �
 loadShared().finally(()=>{
   I=buildI();
   const toSet=a=>new Set((a||[]).map(v=>typeof v==='number'?(OLD[v]||[])[0]:v).map(k=>I.findIndex(x=>x[0]===k)).filter(i=>i>=0));
-  S.sel=toSet(ld('sel',[]));S.bm=toSet(ld('bm',[]));render();
+  S.sel=toSet(ld('sel',[]));S.bm=toSet(ld('bm',[]));render();fbInit();
 });
 </script>
 </body>
