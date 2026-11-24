@@ -554,8 +554,8 @@ function vQuiz(){
   if(!q){
     const n=pool().length,cn=Math.max(1,Math.min(S.cfg.n,n||1));
     const noIn=pool().filter(i=>!hasInner(i)).length;
-    return `<h2 class="font-bold mb-2">퀴즈 유형</h2>${seg('type',[['mix','섞어서'],['mc','뜻→객관식'],['sub','뜻→주관식'],['blank','빈칸 채우기']])}
-    ${c.type==='blank'?'':`<h2 class="font-bold mb-2">문제로 보여줄 뜻 <span class="text-xs font-normal text-slate-500">(객관식·주관식)</span></h2>${seg('mean',[['out','겉뜻'],['in','속뜻'],['mix','겉뜻·속뜻 섞어서']])}${c.mean!=='out'&&noIn?`<p class="text-xs text-slate-500 -mt-2 mb-4">※ 속뜻이 없는 ${noIn}개는 겉뜻(뜻)으로 출제돼요.</p>`:''}`}
+    return `<h2 class="font-bold mb-2">퀴즈 유형</h2>${seg('type',[['mix','섞어서'],['mc','뜻→객관식'],['sub','뜻→주관식'],['read','한자→독음 쓰기'],['blank','빈칸 채우기']])}
+    ${c.type==='blank'||c.type==='read'?'':`<h2 class="font-bold mb-2">문제로 보여줄 뜻 <span class="text-xs font-normal text-slate-500">(객관식·주관식)</span></h2>${seg('mean',[['out','겉뜻'],['in','속뜻'],['mix','겉뜻·속뜻 섞어서']])}${c.mean!=='out'&&noIn?`<p class="text-xs text-slate-500 -mt-2 mb-4">※ 속뜻이 없는 ${noIn}개는 겉뜻(뜻)으로 출제돼요.</p>`:''}`}
     <h2 class="font-bold mb-2">범위</h2>${seg('scope',[['all','전체'],['sel','선택 항목('+S.sel.size+')'],['bm','북마크('+S.bm.size+')']])}
     <h2 class="font-bold mb-2">문제 수</h2><div class="flex items-center gap-3 mb-1"><input id="cn-r" type="range" min="1" max="${n||1}" step="1" value="${cn}" ${n?'':'disabled'} aria-label="문제 수 조절 (드래그)" oninput="A.cnt(this.value,'r')" class="flex-1 accent-[#1F6F5C]"><label class="flex items-center gap-1 text-sm shrink-0"><input id="cn-n" type="number" min="1" max="${n||1}" step="1" value="${cn}" ${n?'':'disabled'} inputmode="numeric" aria-label="문제 수 직접 입력" oninput="A.cnt(this.value,'n')" onchange="A.cnt(this.value,'c')" class="w-20 px-3 py-2 rounded-lg border border-[#C9D2CB] bg-white text-center">문제</label></div>${n?`<p class="text-xs text-slate-500 mb-4">1 ~ ${n}문제 · 슬라이더를 끝까지 끌면 범위 전체</p>`:'<div class="mb-4"></div>'}
     <p class="text-sm text-slate-600 mb-3">출제 대상 ${n}개${n?'':' — 범위에 항목이 없습니다. 학습 선택 탭에서 고르거나 전체를 선택하세요.'}</p>
@@ -563,15 +563,15 @@ function vQuiz(){
   }
   if(q.done){
     return `<div class="card p-5 text-center mb-4"><div class="text-sm text-slate-500">점수</div><div class="text-4xl font-bold">${q.score} / ${q.qs.length}</div></div>
-    <div class="space-y-2 mb-4">${q.qs.map((Q,k)=>`<div class="card p-3 ${Q.ok?'ok':'no'}"><div class="text-sm">${k+1}. ${Q.ok?'정답':'오답'} · ${Q.k?'['+Q.k+'] ':''}${Q.t==='blank'?hLinks(Q.p):esc(Q.p)}</div><div class="text-sm mt-1">정답: <b class="han">${hLinks(Q.show)}</b>${Q.ok?'':` / 내 답: ${esc(Q.us)}`}</div></div>`).join('')}</div>
+    <div class="space-y-2 mb-4">${q.qs.map((Q,k)=>`<div class="card p-3 ${Q.ok?'ok':'no'}"><div class="text-sm">${k+1}. ${Q.ok?'정답':'오답'} · ${Q.k?'['+Q.k+'] ':''}${Q.t==='blank'||Q.t==='read'?hLinks(Q.p):esc(Q.p)}</div><div class="text-sm mt-1">정답: <b class="han">${hLinks(Q.show)}</b>${Q.ok?'':` / 내 답: ${esc(Q.us)}`}</div></div>`).join('')}</div>
     <div class="grid grid-cols-1 gap-2"><button class="b" onclick="A.wrongBm()">틀린 문제 북마크에 담기</button><button class="b bp" onclick="A.start()">같은 설정으로 다시 풀기</button><button class="b" onclick="A.reset()">설정으로 돌아가기</button></div>`;
   }
   const Q=q.qs[q.i], done=Q.u!==undefined;
   let body='';
-  if(Q.t==='sub') body=`<input id="ans" ${done?'disabled':''} value="${done?esc(Q.us):''}" onkeydown="if(event.key==='Enter')A.sub()" placeholder="한자 또는 한글 독음 입력" class="w-full px-4 py-3 rounded-lg border border-[#C9D2CB] bg-white han text-lg mb-2">${done?'':'<button class="b bp w-full" onclick="A.sub()">제출</button>'}`;
+  if(Q.t==='sub'||Q.t==='read') body=`<input id="ans" ${done?'disabled':''} value="${done?esc(Q.us):''}" onkeydown="if(event.key==='Enter'&&!event.isComposing)A.sub()" placeholder="${Q.t==='read'?'한글 독음 입력 (예: 동병상련)':'한자 또는 한글 독음 입력'}" autocomplete="off" class="w-full px-4 py-3 rounded-lg border border-[#C9D2CB] bg-white han text-lg mb-2">${done?'':'<button class="b bp w-full" onclick="A.sub()">제출</button>'}`;
   else body=`<div class="grid grid-cols-2 gap-2">${Q.o.map((o,k)=>{const lab=Q.t==='mc'?`<span class="han text-lg">${I[o][0]}</span><span class="block text-xs text-slate-500">${I[o][1]}</span>`:`<span class="han text-3xl">${o}</span>`;const cls=!done?'':(o===Q.a?'ok':(k===Q.sel?'no':''));return `<button class="b py-3 ${cls}" ${done?'disabled':''} onclick="A.pick(${k})">${lab}</button>`}).join('')}</div>`;
-  return `<div class="flex justify-between mb-3 text-sm"><span>${q.i+1} / ${q.qs.length}</span><span>${{mc:'객관식',sub:'주관식',blank:'빈칸 채우기'}[Q.t]}</span></div>
-  <div class="card p-5 mb-3">${Q.k?`<span class="inline-block text-xs px-2 py-0.5 rounded bg-[#DDF0E6] text-[#1F6F5C] mb-2">${Q.k}</span>`:''}<p class="${Q.t==='blank'?'han text-3xl text-center font-bold':''}">${Q.t==='blank'?hLinks(Q.p):esc(Q.p)}</p>${Q.t==='blank'?`<p class="text-sm text-slate-600 text-center mt-3">${esc(Q.hint)}</p>`:''}</div>${body}
+  return `<div class="flex justify-between mb-3 text-sm"><span>${q.i+1} / ${q.qs.length}</span><span>${{mc:'객관식',sub:'주관식',read:'한자→독음',blank:'빈칸 채우기'}[Q.t]}</span></div>
+  <div class="card p-5 mb-3">${Q.k?`<span class="inline-block text-xs px-2 py-0.5 rounded bg-[#DDF0E6] text-[#1F6F5C] mb-2">${Q.k}</span>`:''}<p class="${Q.t==='blank'||Q.t==='read'?'han text-3xl text-center font-bold':''}">${Q.t==='blank'?hLinks(Q.p):esc(Q.p)}</p>${Q.hint?`<p class="text-sm text-slate-600 text-center mt-3">${esc(Q.hint)}</p>`:''}</div>${body}
   ${done?`<div class="card p-3 mt-3 ${Q.ok?'ok':'no'}">${Q.ok?'정답입니다!':'오답입니다.'} 정답: <b class="han">${hLinks(Q.show)}</b></div><button class="b bp w-full mt-3" onclick="A.next()">${q.i+1<q.qs.length?'다음 문제':'결과 보기'}</button>`:''}`;
 }
 /* 객관식·주관식에서 문제로 보여 줄 뜻: 속뜻이 따로 있는 항목만 속뜻 사용 가능, 없으면 겉뜻(또는 뜻)으로 출제 */
@@ -581,9 +581,10 @@ function qMeaning(i){
   return useIn?{p:u,k:'속뜻'}:{p:m,k:INNER[h]?'겉뜻':''};
 }
 function buildQ(i,type){
-  const [h,r,m]=I[i], t=type==='mix'?['mc','sub','blank'][Math.random()*3|0]:type;
+  const [h,r,m]=I[i], t=type==='mix'?['mc','sub','blank','read'][Math.random()*4|0]:type;
   if(t==='mc'){const o=shuf([i,...shuf(I.map((_,k)=>k).filter(k=>k!==i)).slice(0,3)]);{const q=qMeaning(i);return{t,p:q.p,k:q.k,a:i,o,show:`${h} (${r})`};}}
   if(t==='sub'){const q=qMeaning(i);return{t,p:q.p,k:q.k,h,r,show:`${h} (${r})`};}
+  if(t==='read')return{t,p:h,h,r,hint:'이 사자성어의 독음을 한글로 쓰세요.',show:`${h} (${r})`};   /* 한자만 보여 주고 독음을 쓰게 함 (글자 링크는 달지 않음: 누르면 음이 보여 정답이 새어 나감) */
   const pos=Math.random()*h.length|0, c=h[pos], p=[...h].map((x,k)=>k===pos?'( )':x).join('');
   const o=shuf([c,...shuf([...new Set([...Object.keys(CH),...(I.map(x=>x[0]).join('').match(/[\u3400-\u9FFF]/g)||[])])].filter(x=>x!==c)).slice(0,3)]);
   return{t,p,hint:`뜻: ${m}`,a:c,o,show:`${c} → ${h} (${r})`};
@@ -689,7 +690,7 @@ const A={
   start(){const ids=shuf(pool()).slice(0,Math.max(1,Math.min(S.cfg.n,pool().length)));S.quiz={qs:ids.map(i=>({...buildQ(i,S.cfg.type),i})),i:0,score:0,done:false};render()},
   reset(){S.quiz=null;render()},
   pick(k){const Q=S.quiz.qs[S.quiz.i];if(Q.u!==undefined)return;Q.sel=k;Q.u=Q.o[k];Q.us=Q.t==='mc'?I[Q.u][0]:Q.u;Q.ok=Q.u===Q.a;if(Q.ok)S.quiz.score++;render()},
-  sub(){const Q=S.quiz.qs[S.quiz.i];if(Q.u!==undefined)return;const v=$('#ans').value.trim();if(!v)return;Q.u=v;Q.us=v;Q.ok=norm(v)===norm(Q.h)||norm(v)===norm(Q.r);if(Q.ok)S.quiz.score++;render()},
+  sub(){const Q=S.quiz.qs[S.quiz.i];if(Q.u!==undefined)return;const v=$('#ans').value.trim();if(!v)return;Q.u=v;Q.us=v;Q.ok=Q.t==='read'?norm(v)===norm(Q.r):(norm(v)===norm(Q.h)||norm(v)===norm(Q.r));if(Q.ok)S.quiz.score++;render()},
   next(){const q=S.quiz;q.i++;if(q.i>=q.qs.length){q.i=q.qs.length-1;q.done=true}render()},
   form(k,v){S.form[k]=v},
   err(m){S.err=m;S.msg='';render()},
